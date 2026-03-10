@@ -1,0 +1,336 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+a {
+    text-decoration: none; /* 밑줄 제거 */
+    color: inherit;        /* 기본 파란색 대신 부모의 글자색 상속 */
+}
+
+/* 마우스 오버(호버) 시 스타일도 유지하고 싶을 때 */
+a:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+.nav {
+  display: flex;
+  padding: 15px;
+  align-items: center;
+  justify-content: space-between;
+  background : white;
+  position: relative;
+  width: 100vw;
+  min-width: 350px;
+}
+
+.nav a {
+  margin-right: 15px;
+}
+.logo {
+  font-weight: bold;
+}
+
+.grey-bg {
+  background: #eee;
+}
+
+.white-bg {
+  background: white;
+  margin: 20px;
+  margin-top: 5px;
+  border-radius: 5px;
+  width: 60%;
+  min-width: 350px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.list-box {
+  padding : 15px;
+  height: 100px;
+  overflow: hidden;
+  border-bottom: 1px solid#eee;
+  cursor: pointer;
+  transition: all ease 0.25s;
+}
+
+.list-box:hover {
+  background-color: rgba(0,0,0, 0.05);
+}
+
+.list-box h4{
+  font-size: 16px;
+  margin: 5px;
+  margin-bottom: 15px;
+}
+.list-box p {
+  width: 90%;
+  font-size: 13px;
+  margin: 5px;
+  color: grey;
+  white-space: nowrap; /* 줄바꿈 금지 */
+  overflow: hidden; /* 넘치는 부분 숨김 */
+  text-overflow: ellipsis; /* ... 처리 */
+}
+
+.form-box {
+  background : white;
+  padding : 25px;
+  margin: 20px;
+  border-radius: 8px;
+  width: 60%;
+  min-width: 350px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.write-title {
+  padding : 10px;
+  font-size: 16px;
+  width: 100%;
+  border: 1px solid black;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+.write-content {
+  padding : 10px;
+  font-size: 16px;
+  width: 100%;
+  border: 1px solid black;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  height: 400px;
+  resize: none;
+}
+
+.form-box button {
+  padding: 10px;
+  border : none;
+  background : lightgrey;
+  border-radius: 5px;
+}
+
+.detail-bg {
+  background-color: white;
+  padding: 30px 40px;
+  margin-top: 10px;
+  width: 60%;
+  min-width: 350px;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 5px;
+}
+
+.detail-title {
+  font-size: 22px;
+  min-height: 60px;
+  margin: 0;
+  margin-top: 10px;
+  margin-bottom: 30px;
+  display: block;
+  position: relative;
+}
+
+.detail-title::after {
+  content: "";
+  display: block;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  left: 0;
+  right: 0;
+  margin: auto;
+  margin-top: 10px;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+.detail-content {
+  font-size: 18px;
+  line-height: 1.6;
+  font-weight: 500;
+  white-space: pre-wrap;
+}
+
+.page-btn-container {
+  width: 50%;
+  min-width: 350px;
+  margin: auto;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  bottom: 50px;
+}
+
+.page-btn {
+  display: block;
+  background-color: white;
+  width: 30px;
+  margin: 5px;
+  aspect-ratio: 1 / 1;
+  align-content: center;
+  border-radius: 5px;
+}
+
+.register-input {
+  padding : 10px;
+  font-size: 16px;
+  width: 100%;
+  border: 1px solid black;
+  border-radius: 5px;
+}
+
+.register-box {
+  background : white;
+  padding : 25px;
+  margin: 20px;
+  border-radius: 8px;
+  width :30%;
+  min-width: 350px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.register-box button {
+  padding: 10px;
+  border : none;
+  background : lightgrey;
+  border-radius: 5px;
+}
+.register-box p{
+  margin: 0;
+  margin-bottom: 5px;
+}
+
+.email-verify {
+  margin-bottom: 3px;
+  height: 40px;
+  width: 23%;
+  min-width: 70px;
+  display: none;
+  visibility: hidden;
+}
+
+.verify-code {
+  margin-bottom: 3px;
+  height: 40px;
+  width: 23%;
+  min-width: 70px;
+  display: none;
+  visibility: hidden;
+}
+
+.password-container {
+  position: relative;
+  height: auto;
+}
+
+.absolute{
+  position: absolute;
+}
+.password-eye {
+  top: 25%;
+  right: 3%;
+  font-size: 20px;
+  cursor: pointer;
+  display: none;
+  visibility: hidden;
+}
+
+.show {
+  display: block;
+  visibility: visible;
+}
+
+.list-header {
+  width: 60%;
+  min-width: 350px;
+  height: 30px;
+  background-color: white;
+  margin: auto;
+  margin-top: 5px;
+  margin-bottom: 0;
+  text-align: center;
+  align-content: center;
+  font-size: 20px;
+}
+
+.go-to-register {
+  margin-top: 20px;
+  font-size: 15px;
+  width: 200px;
+  text-align: center;
+  align-content: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+.go-to-register a {
+  text-decoration: underline;
+}
+
+.left-time {
+  margin-bottom: 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pw-condition {
+  font-size: 14px;
+  margin-top: 0;
+
+}
+
+.profile-img{
+  display: block;
+  border-radius: 50%;
+  width: 100%;
+  margin: auto;
+  aspect-ratio: 1/1;
+  object-fit: cover;  /* 이미지가 비율에 맞게 꽉 채워지도록 설정 */
+  cursor: pointer;
+  transition: all ease 0.25s;
+}
+
+.profile-img:hover {
+  filter: brightness(60%);
+}
+
+.flex {
+  display: flex;
+}
+.flex-row {
+  flex-direction: row;
+}
+
+.profile-img-container {
+  display: block;
+  width: 30%;
+  min-width: 136px;
+  margin: auto;
+  border-radius: 50%;
+  position: relative;
+}
+
+.img-plus-btn {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  right: 0;
+  margin: auto;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #eee;
+  font-size: 40px;
+  visibility: hidden;
+  display: none;
+  cursor: pointer;
+}
+
+.visible {
+  visibility: visible;
+  display: block;
+}

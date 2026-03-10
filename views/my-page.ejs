@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/styles/main.css">
+</head>
+<body class="grey-bg">
+    <%- include('nav.ejs')%>
+    <script src="https://kit.fontawesome.com/e7d0c02666.js" crossorigin="anonymous"></script>
+    <div class="list-header"><span>마이 페이지</span></div>
+    <div class="detail-bg" style="font-size: 18px;">
+        <!-- 프로필 섹션 -->
+            <label class="profile-img-container" for="profile-img-btn">
+                <img class="profile-img" src="/images/profile.png">
+                <i class="fa-solid fa-plus img-plus-btn"></i>
+            </label>
+            <input type="file" name="profileImg" id="profile-img-btn" style="display: none;" accept="image/*">
+            <div>
+                <div style="width: 20%; min-width: 200px; margin: auto; margin-top: 20px; text-align: center; font-size: 24px;
+                            margin-bottom: 20px;">
+                    <%= user?.username %>
+                </div>
+                    
+                
+            </div>
+
+        <div style="width: 200px; margin: auto; text-align: center;">
+            <div style="margin-bottom: 10px;">이메일:<br> <%= user?.email %></div>
+            <div style="margin-bottom: 10px;">가입 날짜: <%= user?.createdAt%></div>
+            <div>작성한 글</div>
+        </div>
+    </div>
+<!-- 프로필 사진 변경 로직 -->
+<script>
+    console.log('<%=user.img%>')
+    // 사진이 있는 유저면 프로필 사진 바인딩
+    if ('<%=user.img%>' !== ''){
+        document.querySelector('.profile-img').src= '<%=user.img%>'
+    }
+
+    const fileInput = document.querySelector('input[name="profileImg"]');
+    fileInput.addEventListener('change', async (e)=>{
+        const file = e.target.files[0];
+        if (!file) return
+
+        const formData = new FormData();
+        formData.append('profileImg', file)
+        try {
+            const response = await fetch('/my-page/img', {method : 'POST', body : formData})
+            const result = await response.json();
+            if (response.ok){
+                document.querySelector('.profile-img').src= result.url;
+                return
+            } else {
+                alert('이미지 업로드 실패')
+                return
+            }
+        } 
+        catch (error) {
+            console.log('네트워크 에러')
+        }
+
+    })
+
+
+</script>
+<!-- 프로필 사진 호버링 애니메이션 -->
+<script>
+    document.querySelector('.profile-img-container').addEventListener('mouseenter', ()=>{
+        document.querySelector('.img-plus-btn').classList.add('visible')
+    })
+    document.querySelector('.profile-img-container').addEventListener('mouseleave', ()=>{
+        document.querySelector('.img-plus-btn').classList.remove('visible')
+    })
+</script>
+</body>
+</html>

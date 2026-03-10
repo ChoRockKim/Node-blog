@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/styles/main.css">
+</head>
+<%- include('nav.ejs')%>
+
+<body class="grey-bg">
+  <div class="list-header"><span>게시글</span></div>
+  <div style="min-height: 600px;">
+  <div class="white-bg">
+    <% for (let i=0; i < post.length; i++){%>
+        <a href="/detail/<%= post[i]._id%>">
+          <div class="list-box">
+            <h4><%= post[i].title%></h4>
+            <p><%= post[i].content%></p>
+          </div>
+        </a>
+    <%}%>
+  </div>
+  </div> 
+  
+  <div class="page-btn-container">
+  <% for (let i=1; i<= post.totalPage; i++ ) { %>
+      <a class="page-btn" href="/list/<%=i%>" ><%=i%></a>
+  <%}%>
+  </div>
+</body>
+</html>

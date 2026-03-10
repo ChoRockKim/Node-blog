@@ -1,0 +1,5 @@
+connect mongodb -> 세션방식으로 로그인 구현
+mongodb skip, limit 으로 페이지네이션 구현
+nodemailer 로 사용자 이메일 인증 방식 구현 인증코드 생성 -> db 저장 -> 유저가 제출한 코드와 비교
+bcrypt 로 비밀번호 해싱 후 DB에 저장
+multer + S3 통해 이미지 업로드 구현, 프로필 사진 구현(링크를 DB에 저장)

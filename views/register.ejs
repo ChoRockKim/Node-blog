@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/styles/main.css">
+<%- include('nav.ejs')%>
+
+<body class="grey-bg">
+    <script src="https://kit.fontawesome.com/e7d0c02666.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <form class="register-box">
+        <h3 style="margin-top: 0;">회원가입</h3>
+        <p>별명</p>
+        <input class="register-input"type="text" id="username-input" placeholder="이름을 입력해주세요">
+
+        <p style="margin-top: 10px;">이메일</p>
+        <input class="register-input" type="email" id="email-input" placeholder="example@example.com" style="margin-bottom: 10px;">
+        <div style="display: flex; justify-content: space-between; height: 50px;">
+            <button class="email-verify show" type="button">메일 인증</button>
+            <button class="verify-code" type="button">코드 전송</button>
+            <input class="register-input" id="code" type="text" style="width: 75%; height: 40px;" placeholder="6자리 번호를 입력해주세요."></div>
+        <div class="left-time"></div>
+
+        <p>비밀번호</p>
+        <div class="password-container">
+            <input class="register-input" id="pw-input" type="password" placeholder="비밀번호를 입력해주세요">
+            <i class="fa-solid fa-eye-slash absolute password-eye show" id="eye-open"></i>
+            <i class="fa-solid fa-eye absolute password-eye" id="eye-closed"></i>
+        </div>
+        <div style="margin-bottom: 30px; margin-top: 5px; font-size: 13px;">대문자, 숫자, 특수문자를 각각 1개 이상 포함한 8~20자리</div>
+        
+        <button id="submit-btn" type="submit" >전송</button>
+    </form>
+
+<!-- 사용자 이메일 인증 로직 -->
+<script>
+    var isTimeStart = false;
+    var isVerified;
+    var isCodeWrong;
+    var isEmailExist;
+    const timeText = document.querySelector('.left-time');
+    const sendEmailBtn = document.querySelector('.email-verify')
+    const submitCodeBtn = document.querySelector('.verify-code')
+
+    // 이메일 인증 버튼 클릭 시 로직(카운트다운 시작 + 이메일 발송)
+    sendEmailBtn.addEventListener('click', async () => {
+        const email = document.querySelector('#email-input').value;
+        // 이메일 칸이 비어 있을 시 처리
+        if (!email.trim()){
+            alert('이메일을 입력해주세요.')
+            return
+        }
+        // 이미 인증 했을 시 케이스 처리
+        if (isVerified){
+            alert('이미 인증되었습니다.')
+            return
+        }
+        // 타이머가 이미 돌아가고 있을 시 전송 버튼 막음
+        if (isTimeStart){
+            alert('이미 전송되었습니다.')
+            return
+        }
+        // 전송 버튼과 코드 제출 버튼 교체
+        sendEmailBtn.classList.remove('show');
+        submitCodeBtn.classList.add('show')
+        isTimeStart = true;
+        isCodeWrong = false;
+        isVerified = false;
+        isEmailExist = false;
+        // 1. 3분 카운트 다운 설정
+        let totalSeconds = 3 * 60;
+        timeText.innerText = "03:00";
+        // 1초마다 실행할 로직
+        const timer = setInterval(() => {
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            const displayMin = String(minutes).padStart(2,'0');
+            const displaySec = String(seconds).padStart(2,'0');
+            //시간 초과 시
+            if (totalSeconds <= 0) {
+                clearInterval(timer);
+                timeText.innerHTML = `<span>시간이 초과되었습니다. 잠시 후 다시 시도해주세요.</span>`
+                sendEmailBtn.classList.add('show');
+                submitCodeBtn.classList.remove('show')
+                isTimeStart = false;
+                return;
+            }
+            // 중간에 인증이 완료되었을 경우
+            if (isVerified === true){
+                clearInterval(timer)
+                timeText.innerHTML = '인증 되었습니다.'
+                isTimeStart = false;
+                return
+            }
+            //이메일 중복 시
+            if (isEmailExist === true){
+                clearInterval(timer)
+                timeText.innerHTML = '이미 가입된 이메일입니다.'
+                isTimeStart = false;
+                sendEmailBtn.classList.add('show');
+                submitCodeBtn.classList.remove('show')
+                return
+            }
+        totalSeconds--;
+        // 코드가 잘못되었을 경우
+        if (isCodeWrong === true) {
+                timeText.innerHTML = `${displayMin}:${displaySec} 잘못된 코드입니다.`
+            } else {
+                timeText.innerText = `${displayMin}:${displaySec}`;
+            }
+        }, 1000); // 1초마다 실행        
+
+        // 이메일 인증 요청
+        try {
+            const response = await axios.post('/api/send-auth-email', {email : email})
+            console.log(response.data)
+            alert(response.data.message) // 이메일이 발송되었습니다.
+        
+        } catch (error) {
+            if (error.response){
+                if (error.response.status === 409){
+                    isEmailExist = true;
+                }
+                else if (error.response.status === 400){
+                    isCodeWrong = true;
+                }
+            }
+        }
+    })
+    // 코드 제출 + 비교 로직
+    submitCodeBtn.addEventListener('click', async () => {
+        const code = document.querySelector('#code').value;
+        const email = document.querySelector('#email-input').value;
+        if (isVerified){
+            alert('이미 인증되었습니다.')
+            return
+        } 
+        // 코드가 일치할 경우
+        try {
+            const response = await axios.post('/api/verify-code', {code : code, email : email})
+            alert(response.data.message)
+            isVerified= true;
+            console.log(response.data)
+            return
+        } 
+        // 코드가 틀렸을 경우 
+        catch (error) {
+            console.log(error.response.data)
+            if (error.response.data){
+                if (error.response.status === 409){
+                    isTimeStart = false;
+                    isEmailExist = true;
+                } 
+                else if (error.response.status === 400) {
+                    isCodeWrong = true;
+                }
+            }
+        }
+    })
+
+</script>
+<!-- 비밀번호 보기/가리기 로직 + 회원가입 요청 로직-->
+<script>
+    // 비밀번호 보기/가리기 로직
+    const eyeOpen = document.querySelector('#eye-open')
+    const eyeClose = document.querySelector('#eye-closed')
+    const pwInput = document.querySelector('#pw-input')
+
+    eyeOpen.addEventListener('click', (e) => {
+        e.target.classList.remove('show')
+        eyeClose.classList.add('show')
+        pwInput.type='text'
+    })
+
+    eyeClose.addEventListener('click', (e) => {
+        e.target.classList.remove('show')
+        eyeOpen.classList.add('show')
+        pwInput.type='password'
+    })
+
+    //회원가입 요청 로직 ===========================
+    document.querySelector('.register-box').addEventListener('submit', (e) => {
+        e.preventDefault();
+    })
+    
+    document.querySelector('#submit-btn').addEventListener('click', async () => {
+        const password = document.querySelector('#pw-input').value;
+        const email = document.querySelector('#email-input').value;
+        const username = document.querySelector('#username-input').value;
+        // 유효성 검사
+        const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[a-zA-Z\d!@#$%^&*]{8,20}$/;
+        if (!username.trim()){
+            alert('이름을 입력해주세요.')
+            return;
+        } else if(!email.trim()){
+            alert('이메일을 입력해주세요.')
+            return
+        } else if (!isVerified) {
+            alert('이메일을 인증해주세요.')
+            return
+        } else if (!password.trim()){
+            alert('비밀번호를 입력해주세요.')
+            return
+        }
+        //비밀번호 유효성 검사
+        if (!passwordRegex.test(password)) {
+            alert('비밀번호는 대문자, 숫자, 특수문자를 각각 1개 이상 포함하여 8~20자리로 입력해주세요.');
+            return; 
+        }
+        //회원가입 요청
+        try {
+            const response = await axios.post('/register', 
+            {password : password, email : email, username : username})
+
+            alert(response.data.message);
+            console.log(response)
+            window.location.href = '/list'
+            
+        } catch (error) {
+            if (error.response) {
+                alert(error.response.data.message);
+                isVerified = false
+                console.log(error)
+                return
+            }
+        }   
+
+    })
+
+</script>
+
+</body>
+</html>

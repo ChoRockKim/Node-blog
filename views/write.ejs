@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/styles/main.css">
+</head>
+<%- include('nav.ejs')%>
+<body class="grey-bg">
+    <form class="form-box" action="/newpost", method="POST">
+        <h4>글 작성</h4>
+        <input class="write-title" name="title" type="text" placeholder="제목을 입력해주세요">
+        <textarea class="write-content" name="content" type="text" placeholder="내용을 입력해주세요"></textarea>
+        <input style="display: block; margin-bottom: 10px;" type="file" name="img1" accept="image/*" multiple>
+        <button id="submit-btn" type="submit" >전송</button>
+    </form>
+
+<script>
+    document.querySelector('.form-box').addEventListener('submit', (e) => {
+        e.preventDefault();
+    })
+    // 글 작성 로직
+    document.querySelector('#submit-btn').addEventListener('click', async () => {
+        const title = document.querySelector('.write-title').value;
+        const content = document.querySelector('.write-content').value;
+        const fileInput = document.querySelector('input[name="img1"]');
+        const file = fileInput.files[0]; // 선택된 첫 번째 파일
+        // FormData 객체 생성
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('content', content);
+        if (file) {
+            formData.append('img1', file); // 파일 추가
+        }
+        try {
+            const response = await fetch('/newpost', {method : 'POST', body : formData});
+            const result = await response.json();
+            if (response.ok) {
+                alert(result.message)
+                console.log(response)
+                window.location.href = '/list';
+            } else {
+                alert(result.message);
+            }
+
+        } catch (e) {
+            alert(e);
+            console.log(e);
+
+        }
+
+    })
+
+</script>
+
+</body>
+</html>

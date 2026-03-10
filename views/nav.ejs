@@ -1,0 +1,15 @@
+    <div class="nav">
+        <div>
+            <a class="logo" href="/list">ChorockBlog</a>
+            <a href="/list">글 목록</a>
+            <a href="/write">글 작성</a>
+        </div>
+        <div>
+        <% if (!user) {%>
+            <a href="/login">로그인</a>
+        <%} else {%>
+            <a href="/logout">로그아웃</a>
+            <a href="/my-page">마이페이지</a>
+        <%}%>
+        </div>
+    </div>

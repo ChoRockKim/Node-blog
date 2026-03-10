@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/styles/main.css">
+</head>
+<%- include('nav.ejs')%>
+<body class="grey-bg">
+
+    <div class="detail-bg">
+        <h4 class="detail-title"><%= post.title%></h4>
+        <p  class="detail-content"><%= post.content %></p>
+        <img style="display: block; width: 75%; margin: auto; margin-bottom: 30px;" src="<%= post.img %>">
+        <div style="cursor: pointer;">
+            <a style="text-decoration: underline;" href="/edit/<%=post._id%>">글 수정</a>     
+            <span id="delete-btn" style="text-decoration: underline;">글 삭제</span>
+        </div>
+    </div>
+<!-- 글 삭제 요청 시 처리 -->
+<script>
+    document.querySelector('#delete-btn').addEventListener('click', async () => {
+        if (window.confirm('삭제하시겠습니까?')) {
+            try {
+                const response = await fetch('/detail?_id=<%post._id%>', 
+                    {method : 'DELETE', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body : JSON.stringify(
+                        { 
+                            _id : '<%=post._id%>'
+                        }
+                    )})
+                    const result = await response.json();
+                if (response.ok) {
+                    alert(result.message)
+                    window.location.href = '/list';
+                    return
+                } else {
+                    alert(result.message);
+                }
+
+            } catch (error) {
+                
+            }
+        } else {
+            return
+        }
+    })
+</script>
+
+</body>
+</html>

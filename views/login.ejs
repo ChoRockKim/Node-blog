@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    
+</head>
+<%- include('nav.ejs')%>
+<body class="grey-bg">
+    <script src="https://kit.fontawesome.com/e7d0c02666.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <form class="register-box">
+        <h3 style="margin-top: 0;">로그인</h3>
+        <p>아이디</p>
+        <input class="register-input" id="email-input" name="title" type="email" placeholder="example@example.com">
+        <p style="margin-top: 10px;">비밀번호</p>
+        <div class="password-container" style="margin-bottom: 30px;">
+            <input style="margin-bottom: 5px;" class="register-input" id="pw-input" type="password" name="password" placeholder="비밀번호를 입력해주세요">
+            <i class="fa-solid fa-eye-slash absolute password-eye show" id="eye-open"></i>
+            <i class="fa-solid fa-eye absolute password-eye" id="eye-closed"></i>
+        <p class="pw-condition"></p>
+        </div>
+        
+        <button id="submit-btn" type="submit" >로그인</button>
+        <div class="go-to-register">아이디가 없으신가요? <a href="/register">회원가입</a></div>
+    </form>
+
+<!-- 비밀번호 보기/가리기 로직 -->
+<script>
+    const eyeOpen = document.querySelector('#eye-open')
+    const eyeClose = document.querySelector('#eye-closed')
+    const pwInput = document.querySelector('#pw-input')
+
+    eyeOpen.addEventListener('click', (e) => {
+        e.target.classList.remove('show')
+        eyeClose.classList.add('show')
+        pwInput.type='text'
+    })
+
+    eyeClose.addEventListener('click', (e) => {
+        e.target.classList.remove('show')
+        eyeOpen.classList.add('show')
+        pwInput.type='password'
+    })
+</script>
+
+<script>
+    // 폼 제출 기능 블록
+    document.querySelector('.register-box').addEventListener('submit', (e) => {
+        e.preventDefault();
+    })
+
+    document.querySelector('#submit-btn').addEventListener('click', async () => {
+        const email = document.querySelector('#email-input').value;
+        const password = document.querySelector('#pw-input').value;
+        // 입력 유효성 검사
+        if (!email.trim()){
+            alert('이메일을 입력해주세요')
+            return
+        }
+        if (!password.trim()){
+            document.querySelector('.pw-condition').innerHTML= '비밀번호를 입력해주세요.'
+            return
+        }
+        // 로그인 요청
+        try {
+            const response = await axios.post('/login', {email : email, password : password})
+            alert(response.data.message)
+            window.location.href = "/list/1";
+        }
+        // 비밀번호 틀렸을 시 
+        catch (error) {
+            if (error.response){
+                console.log(error.response)
+                document.querySelector('.pw-condition').innerHTML = error.response.data.message
+            }
+        }
+
+    })
+</script>
+
+</body>
+</html>
