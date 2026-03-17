@@ -9,11 +9,11 @@
 <%- include('nav.ejs')%>
 
 <body class="grey-bg">
-  <div class="list-header"><span>게시글</span></div>
+  <div class="list-header"><span>검색결과</span></div>
   <div>
   <div class="white-bg">
     <%if (post?.length < 1){%>
-          <div class="no-list">게시글이 없습니다.</div>
+          <div class="no-list">검색결과가 없습니다.</div>
       <%} else {%>
       <% for (let i=0; i < post.length; i++){%>
         <a href="/detail/<%= post[i]._id%>">
@@ -42,9 +42,8 @@
   <div class="page-btn-container">
     
   <% for (let i=1; i<= post.totalPage; i++ ) { %>
-      <a class="page-btn" href="/list/<%=i%>" ><%=i%></a>
+      <a class="page-btn" href="<%=i%>" ><%=i%></a>
   <%}%>
   </div>
-
 </body>
 </html>

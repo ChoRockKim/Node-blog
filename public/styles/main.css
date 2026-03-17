@@ -50,9 +50,15 @@ a:hover {
   margin-right: auto;
 }
 
+.no-list {
+  font-size: 20px;
+  text-align: center;
+}
+
 .list-box {
   padding : 15px;
-  height: 100px;
+  min-height: 130px;
+  max-height: 200px;
   overflow: hidden;
   border-bottom: 1px solid#eee;
   cursor: pointer;
@@ -64,13 +70,18 @@ a:hover {
 }
 
 .list-box h4{
-  font-size: 16px;
+  font-size: 18px;
   margin: 5px;
-  margin-bottom: 15px;
+  margin-top: 8px;
+  margin-bottom: 10px;
+  overflow: hidden; /* 넘치는 부분 숨김 */
+  text-overflow: ellipsis; /* ... 처리 */
+  white-space: nowrap; /* 줄바꿈 금지 */
+
 }
 .list-box p {
   width: 90%;
-  font-size: 13px;
+  font-size: 14px;
   margin: 5px;
   color: grey;
   white-space: nowrap; /* 줄바꿈 금지 */
@@ -241,11 +252,6 @@ a:hover {
   visibility: hidden;
 }
 
-.show {
-  display: block;
-  visibility: visible;
-}
-
 .list-header {
   width: 60%;
   min-width: 350px;
@@ -330,7 +336,248 @@ a:hover {
   cursor: pointer;
 }
 
+.search-container {
+  display: flex;
+  width: 60%;
+  min-width: 350px;
+  height: 30px;
+  margin: auto;
+  margin-top: 5px;
+  margin-bottom: 0;
+  align-content: center;
+  font-size: 20px;
+}
+
+.search-container input {
+  height: 30px;
+  width: 250px;
+}
+
+.search-btn {
+  margin-left: 5px;
+  height: 30px;
+}
+.list-profile-img-container {
+  display: block;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  margin-left: 5px;
+}
+
+.list-profile-img-container img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.detail-profile-img {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.detail-profile-img img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+
+.comment-write {
+  margin-top: 10px;
+  padding : 10px;
+  font-size: 14px;
+  width: 100%;
+  border: 1px solid black;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  height: 100px;
+  resize: none;
+}
+
+.comment-container {
+  width: 100%;
+  min-height: 200px;
+  background-color: #eee;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 10px;
+  display: none;
+  visibility: hidden;
+}
+
+.comment-submit-btn {
+    padding: 8px;
+    border: none;
+    background: lightgrey;
+    border-radius: 5px;
+}
+
+.commentor-profile-img {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.commentor-profile-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.open-comment {
+  margin-top: 20px;
+  border: 1px solid rgb(0,0,0,0.7);
+  border-radius: 3px;
+  width: 90px;
+  height: 30px;
+  align-content: center;
+  padding: 5px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+}
+
+.open-comment span {
+  display: block;
+  width: 83%;
+  position: relative;
+}
+
+.open-comment span::after {
+  content: "";
+  display: block;
+  position: absolute;
+  height: 90%;
+  width: 1px;
+  background-color: black;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.comment-arrow {
+  width: 15%;
+}
+
+.comment-box {
+  width: 100%;
+  margin-bottom: 15px;
+  position: relative;
+  padding-bottom: 5px;
+  padding-top: none;
+  position: relative;
+}
+
+.comment-box::after {
+  display: block;
+  content: '';
+  width: 100%;
+  height: 1px;
+  position: absolute;
+  background-color: black;
+  bottom: 0;
+  margin-left: auto;
+  margin-right: auto;
+  left: 0;
+  right: 0;
+}
+
+.comment-date {
+  font-size: 13px;
+  color: rgb(0,0,0,0.7);
+}
+
+.comment-img {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.comment-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.comment-content {
+  white-space: pre-wrap;
+  margin-bottom: none;
+}
+
+.comment-menu {
+  position: absolute;
+  top: 0;
+  right: 0;
+  cursor: pointer;
+}
+
+.comment-menu-box {
+  width: 50px;
+  height: 60px;
+  border: 1px solid black;
+  background-color: white;
+  position: absolute;
+  top: 20px;
+  right: 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  display: none;
+  visibility: hidden;
+}
+
+.comment-menu-btn {
+  text-align: center;
+  width: 100%;
+  height: 50%;
+  padding: 5px;
+}
+
+.comment-menu-btn:hover {
+  background-color: rgba(0,0,0, 0.05);
+}
+
+.show {
+  display: block;
+  visibility: visible;
+}
+
 .visible {
   visibility: visible;
   display: block;
+}
+
+.no-drag {
+  -webkit-user-select: none;  /* 사파리 */
+  -moz-user-select: none;     /* 파이어폭스 */
+  -ms-user-select: none;      /* 익스플로러/엣지 */
+  user-select: none;          /* 표준 */
+}
+
+/* 여기부턴 채팅방 레이아웃임 */
+
+.chat-screen { width: 100%; }
+.chat-box { margin-top: 15px; display: flex; }
+.chat-box span { padding: 10px; background: #eee; }
+.mine { justify-content: end; }
+.chat-input {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 5px;
+}
+.chat-button {
+  padding: 10px;
+  border : none;
+  background : lightgrey;
+  border-radius: 5px;
 }

@@ -29,7 +29,6 @@ app.use(passport.initialize())
 
 app.use(passport.session())
 
-
 // S3 연결 설정
 const { S3Client } = require('@aws-sdk/client-s3')
 const multer = require('multer')
@@ -51,7 +50,6 @@ const upload = multer({
     }
   })
 })
-
 // MongoDB 연결
 let db;
 connectDB.then((client)=>{
@@ -63,6 +61,11 @@ connectDB.then((client)=>{
   })
 }).catch((err)=>{
   console.log(err)
+})
+//모든 라우터에 db를 쓸 수 있게 담아줌
+app.use((req, res, next) => {
+    req.db = db;
+    next();
 })
 // 모든 ejs 파일에 유저 로그인 정보 바인딩
 app.use((req, res, next) => {
@@ -102,27 +105,17 @@ passport.deserializeUser(async (user, done) => {
         done(null, result)
     })
 })
-// 메인 페이지
-app.get('/', (req, res) => {
-    res.redirect('/list')
-})
-// 글 목록 페이지
-app.get('/list', async (req, res) => {
-    const result = await db.collection('post').find().toArray();
-    res.redirect('/list/1')
-})
-// 글 목록 페이지네이션
-app.get('/list/:id', async (req, res) => {
-    const limit = parseInt(6);
-    const id = parseInt(req.params.id);
-    const result = await db.collection('post').find().skip((id-1)*limit).limit(limit).toArray();
-    
-    const totalPost = await db.collection('post').countDocuments();
-    const totalPages = Math.ceil(totalPost/limit);
-    result.totalPage = totalPages;
-    result.curPage = id;
-    res.render('list.ejs', { post : result, user : req?.user})
-})
+// 로그인 확인하는 미들웨어 정의
+const checkLogin = (req, res, next) => {
+    if (!req.user){
+        res.status(500).send({message : "로그인해야 합니다."})
+        return
+    } else {
+        next()
+    }
+}
+//메인페이지 라우팅
+app.use('/', require('./routes/list'));
 // 글 작성 페이지
 app.get('/write', (req, res) => {
     // 로그인되어있지 않다면 로그인 페이지로 리다이렉팅
@@ -133,13 +126,21 @@ app.get('/write', (req, res) => {
     res.render('write.ejs')
 })
 //글 작성 로직
-app.post('/newpost', async (req, res) => {    
+app.post('/newpost', checkLogin, async (req, res) => {    
     upload.single('img1')(req, res, async (err) => {
         // 이미지 업로드 에러 처리
         if (err) return res.status(500).send({message : '이미지 업로드에 실패하였습니다.'})
             try {
                 let post = req.body;
                 post.img = req.file?.location
+                // 임베딩 시킬 작성자 객체 생성
+                let author = {
+                    username : req.user.username,
+                    email : req.user.email,
+                    img : req.user.img
+                }
+                post.createdAt = new Date();
+                post.author = author;
                 //유효성 검사
                 if (!post.title.trim() || !post.content.trim()){
                     res.status(400).send({ message : '모든 칸을 채워주세요!' })
@@ -158,25 +159,29 @@ app.get('/detail/:id', async (req, res) => {
     try {
         const id = req.params;
         const result = await db.collection('post').findOne({ _id : new ObjectId(id)})
+        const comments = await db.collection('comments').find({ parent : new ObjectId(id)}).toArray();
         // db에서 null 값 왔을 경우 리다이렉트
         if (result === null) {
-            res.redirect('/list')
+            return res.redirect('/list')
         }
-        res.render('detail.ejs', { post : result}); 
+        res.render('detail.ejs', { post : result, comment : comments}); 
         // 이상한 값을 입력했을 경우 리다이렉트
     } catch (error) {
-        res.redirect('/list')
+        return res.redirect('/list')
     }
 })
 // 글 수정 페이지 렌더링
 app.get('/edit/:id', async (req, res) => {
-    // 로그인 
+    // 로그인 확인
     if (!req.user){
-        res.redirect('/list')
-        return
+        return res.redirect('/list')
     }
-    const id = req.params;
+    const id = req.params.id;
     const result = await db.collection('post').findOne({ _id : new ObjectId(id)})
+    // 작성자 확인
+    if (result.author.email != req.user.email){
+        return res.redirect('/list')
+    }
     res.render('edit.ejs', {post : result})
 })
 // 글 수정 요청 처리
@@ -196,9 +201,16 @@ app.patch('/edit', (req, res) => {
     }
 })
 // 글 삭제 요청 처리
-app.delete('/detail', (req, res) => {
+app.delete('/detail', checkLogin, async (req, res) => {
+    if (!req.user){
+        return res.status(400).send({message:'로그인하셔야 합니다.'})
+    }
+    const result = await db.collection('post').findOne({ _id : new ObjectId(req.body._id)})
+    if (result.author.email != req.user.email){
+        return res.status(400).send({message:'권한이 없습니다.'})
+    }
     try {
-        db.collection('post').deleteOne({_id : new ObjectId(req.body._id)})
+        db.collection('post').deleteOne({_id : new ObjectId(req.body._id),})
         res.status(200).send({message : '게시글이 삭제되었습니다.'})
     } catch (error) {
         res.status(500).send({message : '네트워크 오류'})
@@ -218,8 +230,10 @@ app.post('/register', async (req, res) => {
     //이미 가입된 정보가 있는지 확인
     try {
         if (await db.collection('users').findOne({ email : user_data.email })){
-            res.status(400).send({message:'이미 존재하는 이메일입니다.'})
-            return
+            return res.status(400).send({message:'이미 존재하는 이메일입니다.'})
+            
+        } else if (await db.collection('users').findOne({ username : user_data.username})){
+            return res.status(400).send({message:'이미 존재하는 별명입니다.'})
         }
     } catch (error) {
         res.status(500).send({message:'네트워크 오류', error : error})
@@ -329,14 +343,7 @@ app.post('/api/verify-code', async (req, res) => {
     }
 })
 // 로그인 페이지 렌더링
-app.get('/login', (req, res) => {
-    if (req.user){
-        res.redirect('/list')
-        return
-    }
-    console.log(req.user)
-    res.render('login.ejs')
-})
+app.use('/', require('./routes/login'))
 // 유저 로그인 요청 로직
 app.post('/login', async (req, res, next) => {
     passport.authenticate('local', (error, user, info) => {
@@ -392,5 +399,15 @@ app.post('/my-page/img', async (req, res) => {
             }
     })
 })
+app.use('/', require('./routes/comment'))
+// 채팅방 라우터
+app.use('/', require('./routes/chat'))
+// 다른 유저 정보 페이지
+app.use('/', require('./routes/user'))
 
-app.use('/shop', require('./routes/shop'))
+// 400 에러처리 미들웨어
+app.use((req, res, next) => {
+    res.status(404).render('error.ejs', { 
+        message: '요청하신 페이지를 찾을 수 없습니다.' 
+    });
+});

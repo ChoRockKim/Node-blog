@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>알림 | 서비스 에러</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #ffffff; /* 순백색 배경 */
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            color: #1a1a1a; /* 짙은 회색 텍스트 */
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+        }
+        .error-code {
+            font-size: 8rem;
+            font-weight: 900;
+            margin: 0;
+            line-height: 1;
+            letter-spacing: -5px;
+            color: #f0f0f0; /* 배경과 대비되는 아주 연한 회색 */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+        }
+        .message-box {
+            position: relative;
+            z-index: 1;
+        }
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .back-link {
+            display: inline-block;
+            padding: 12px 24px;
+            border: 1px solid #1a1a1a;
+            color: #1a1a1a;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        .back-link:hover {
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="error-code">ERROR</div>
+
+    <div class="container">
+        <div class="message-box">
+            <h1>문제가 발생했습니다.</h1>
+            <p><%= typeof message !== 'undefined' ? message : '요청하신 페이지를 처리할 수 없습니다.' %></p>
+            <a href="/list" class="back-link">목록으로 돌아가기</a>
+        </div>
+    </div>
+
+</body>
+</html>

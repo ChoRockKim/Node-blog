@@ -8,19 +8,94 @@
 </head>
 <%- include('nav.ejs')%>
 <body class="grey-bg">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://kit.fontawesome.com/e7d0c02666.js" crossorigin="anonymous"></script>
 
     <div class="detail-bg">
+        <div style="display: flex; align-items: center">
+            <div class="detail-profile-img">
+                <img src="<%= post.author.img && post.author.img !== '' ? post.author.img : '/images/profile.png' %>" alt="">
+            </div>
+            <p class="no-drag" style="font-size: 19px;"><a href="/user/<%=post.author.username%>"><%= post.author.username %></a></p>
+        </div>
         <h4 class="detail-title"><%= post.title%></h4>
         <p  class="detail-content"><%= post.content %></p>
         <img style="display: block; width: 75%; margin: auto; margin-bottom: 30px;" src="<%= post.img %>">
+        <p style="font-size: 14px; margin-bottom: 15px; color: rgba(0,0,0,0.6);"><%= new Date(post.createdAt).toLocaleString('ko-KR', { dateStyle: 'long', timeStyle: 'short' }) %></p>
+        
+        <!-- 작성자가 아니거나 관리자가 아니라면 수정/삭제 버튼 숨기기 -->
+        <% if (user?.email == post.author.email || user?.role == 'admin') {%>
         <div style="cursor: pointer;">
-            <a style="text-decoration: underline;" href="/edit/<%=post._id%>">글 수정</a>     
+            <a style="text-decoration: underline;" id="edit-btn">글 수정</a> 
             <span id="delete-btn" style="text-decoration: underline;">글 삭제</span>
+        </div><%}%>
+
+        <!-- 댓글 열기/닫기 버튼 -->
+        <div class="open-comment">
+            <span class="open-comment-text no-drag">댓글 열기</span>
+            <div class="comment-arrow">▽</div>
+        </div>
+        <!-- 댓글 섹션 -->
+        <div class="comment-container show">
+            <div style="margin-bottom: 20px;">
+            
+                <!-- 댓글이 없을 때 처리 -->
+            <%if (comment.length < 1) {%>
+                <div>댓글이 없습니다.</div>
+            <%}%>
+                <!-- 댓글이 있을 때, 댓글 란 -->
+                <%for (let i=0; i<comment.length; i++){%>
+                <div class="comment-box">
+                    <div style="display: flex; align-items: center;">
+                        <div class="comment-img"><img src="<%= comment[i].commentor.img !=='' ? comment[i].commentor.img : '/images/profile.png' %>" alt=""></div>
+                        <div><%=comment[i].commentor.username%></div>
+                    </div>
+                    <div>
+                        <p class="comment-content"><%=comment[i].content%></p>
+                        <span class="comment-date"><%= new Date(comment[i].createdAt).toLocaleString('ko-KR', { dateStyle: 'long', timeStyle: 'short' }) %></span>
+                    </div>
+                    <!-- 댓글 수정/삭제 박스 -->
+                    <%if (user?._id.toString() == comment[i].commentor.id.toString()){%>
+                    <div class="comment-menu">
+                        <i class="fa-solid fa-bars menu-btn"></i>
+                        <div class="comment-menu-box menu-box">
+                            <div class="comment-menu-btn comment-edit-btn" 
+                                onclick="handleEdit(this, '<%=comment[i]._id%>', `<%= Buffer.from(comment[i].content).toString('base64') %>`, '<%=comment[i].commentor.id%>', '<%=user._id%>')">
+                            수정</div>
+                            <div class="comment-menu-btn comment-delete-btn">삭제</div>
+                        </div>
+                    </div>
+                    <%}%>
+                </div>    
+            <%}%>
+            </div>
+            <!-- 댓글 작성 란 -->
+            <div style="display: flex; align-items: center;">
+                <span class="commentor-profile-img">
+                    <img src="<%= user && user.img !== '' ? user.img : '/images/profile.png' %>" alt="">
+                </span>
+                <span class="no-drag"><%= user ? user.username : '로그인 필요'%></span>
+            </div>
+            <input type="hidden" id="edit-id" value="">
+            <textarea name="" class="comment-write" placeholder="댓글을 입력해주세요." id="comment"></textarea>
+            <button class="comment-submit-btn">등록</button>
         </div>
     </div>
+    
 <!-- 글 삭제 요청 시 처리 -->
 <script>
-    document.querySelector('#delete-btn').addEventListener('click', async () => {
+    document.querySelector('#delete-btn')?.addEventListener('click', async () => {
+        if (!'<%=user%>'){
+            alert('로그인하셔야 합니다.')
+            window.location.href = '/login';
+            return
+        }
+        if ('<%= user?.role%>' !== 'admin'){
+            if (('<%= user?.email %>' !== '<%= post.author.email %>')){
+                alert('권한이 없습니다.')
+                return
+            }
+        }
         if (window.confirm('삭제하시겠습니까?')) {
             try {
                 const response = await fetch('/detail?_id=<%post._id%>', 
@@ -48,6 +123,148 @@
         }
     })
 </script>
+<!-- 글 수정 요청 처리 -->
+<script>
+    const edit = document.querySelector('#edit-btn');
+    edit?.addEventListener('click', async () => {
+        if (!'<%=user%>'){
+            alert('로그인하셔야 합니다.')
+            window.location.href = '/login';
+            return
+        }
+        if ('<%= user?.role%>' !== 'admin'){
+            if (('<%= user?.email %>' !== '<%= post.author.email %>')){
+                alert('권한이 없습니다.')
+                return
+            }
+        }
+        window.location.href = '/edit/<%=post._id%>'
+    })
+</script>
+<!-- 댓글 처리 -->
+<script>
+    // 댓글란 보기/숨기기 처리
+    let isShown = true;
+    let comment = document.querySelector('.comment-container')
+    let arrow = document.querySelector('.comment-arrow')
+    let text = document.querySelector('.open-comment-text')
+    document.querySelector('.open-comment').addEventListener('click', () => {
+        if (!isShown) {
+            comment.classList.add('show')
+            arrow.innerHTML = '△'
+            text.innerHTML = '댓글 닫기'
+            isShown = true;
+        } else {
+            comment.classList.remove('show')
+            arrow.innerHTML = '▽'
+            text.innerHTML = '댓글 열기'
+            isShown = false;
+        }
+    })
+    // 댓글 등록/수정 기능
+    let submit = document.querySelector('.comment-submit-btn')
+    submit.addEventListener('click', async ()=>{
+        if (!'<%=user%>'){
+            alert('로그인하셔야 합니다.')
+            return window.location.href= '/login'
+        }
+        let content = document.querySelector('#comment').value;
+        const editId = document.querySelector('#edit-id').value; // 숨겨진 ID 가져오기
+        
+        // 수정모드
+        if (editId){
+            try {
+                content = content.trim();
+                const response = await axios.patch('/detail/comment', {_id : editId, content : content, userId : '<%=user?._id%>' })
+                alert(response.data.message);
+                window.location.href = '/detail/<%=post?._id%>';
+            } catch (error) {
+                if (error.response){
+                    return alert(error.response.data.message);
+                } 
+            }
+        }
+        // 댓글 게시 모드
+        else {
+            if (!content.trim()){
+                document.querySelector('#comment').focus();
+                return alert('내용을 작성해주세요.')
+            }
+            try {
+                const response = await axios.post('/detail/comment', { 
+                    commentor : { username : '<%=user?.username%>', id : '<%=user?._id%>', email : '<%=user?.email%>', img : '<%=user?.img%>'},
+                    createdAt : new Date(),
+                    parent : '<%=post?._id%>',
+                    content : content
+                })
+                alert(response.data.message);
+                window.location.href = '/detail/<%=post?._id%>'
 
+            } catch (error) {
+                if (error.response){
+                    alert(error.response.data.message);
+                }
+            }
+        }
+    })
+</script>
+<!-- 댓글 수정/삭제 박스 열기/닫기 -->
+<script>
+    let menus = document.querySelectorAll('.comment-menu');
+    const handleEdit = async (el, id, encodedContent, commentorId, userId) => {
+        if (!'<%=user%>'){
+            return alert('로그인하셔야 합니다.')
+        }
+        if (commentorId != userId){
+            return alert('권한이 없습니다.')
+        }
+        const menuBox = el.closest('.comment-menu-box');
+        if (menuBox) {
+            menuBox.classList.remove('show');
+        }
+        // base64 인코딩된 게시글내용 디코딩
+        const content = decodeURIComponent(atob(encodedContent).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);}).join(''));
+        document.querySelector('#comment').innerHTML = content;
+        // 수정댓글 id 채워넣기
+        document.querySelector('#edit-id').value = '';
+        document.querySelector('#edit-id').value = id;
+        document.querySelector('.comment-submit-btn').textContent = '수정'
+        document.querySelector('#comment').focus();
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    menus.forEach((node, idx)=>{
+        let editBtn = node.querySelector('.comment-edit-btn');
+        let deleteBtn = node.querySelector('.comment-delete-btn');
+        let menuBox = node.querySelector('.menu-box');
+        // 수정/삭제 박스 열기 닫기
+        node.querySelector('.menu-btn').addEventListener('click', () => {
+            menuBox.classList.toggle('show');
+        })
+        //수정 삭제 요청 처리
+
+    })
+    // 메뉴 상자 닫기
+    document.addEventListener('click', (e) => {        
+        const allMenuBoxes = document.querySelectorAll('.comment-menu-box');
+        const allMenuButtons = document.querySelectorAll('.menu-btn');
+        let isClickInsideMenu = false;
+        allMenuButtons.forEach((btn, idx) => {
+            // 클릭된 곳이 버튼 그 자체거나, 버튼의 자식 요소(아이콘 등)인 경우
+            if (btn.contains(e.target)) isClickInsideMenu = true;
+        });
+        allMenuBoxes.forEach((box) => { 
+            // 클릭된 곳이 메뉴 박스 내부인 경우
+            if (box.contains(e.target)) isClickInsideMenu = true;
+        });
+        // 만약 메뉴 밖을 클릭했다면 모든 메뉴를 닫기
+        if (!isClickInsideMenu) {
+            allMenuBoxes.forEach(box => box.classList.remove('show'));
+        }
+    });
+
+
+</script>
 </body>
 </html>
