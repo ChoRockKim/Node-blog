@@ -8,29 +8,38 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # 1. 최신 코드 가져오기 (v4로 업데이트해서 Node 20 경고 해결)
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      # 1. 도커 빌드 & 푸시
-      - name: Docker build & push
+      # 2. 도커 허브 로그인 (전용 Action 사용으로 'interactive login' 에러 원천 봉쇄)
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # 3. 도커 이미지 빌드 및 푸시
+      - name: Build and push Docker image
         run: |
-          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/node-blog .
-          docker push ${{ secrets.DOCKER_USERNAME }}/node-blog
+          # 💡 DOCKER_USERNAME이 비어있으면 여기서 에러가 나니 꼭 Secrets 확인!
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/node-blog:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/node-blog:latest
 
-      # 2. EC2 원격 접속 및 실행
-      - name: EC2 Deploy
-        uses: appleboy/ssh-action@master
+      # 4. EC2 서버 접속 및 배포 실행
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3 # 최신 버전 사용
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # 기존에 돌아가던 컨테이너가 있다면 끄고 삭제 (없으면 무시)
+            # 서버에서 도커 명령어 실행
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/node-blog:latest
             sudo docker stop my-blog || true
             sudo docker rm my-blog || true
-            # 최신 이미지 내려받기
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/node-blog
-            # 새 컨테이너 실행 (80포트로 접속하면 내부 8080으로 연결)
             sudo docker run -d -p 80:8080 --name my-blog \
               -e MONGODB_URL='${{ secrets.MONGODB_URL }}' \
-              ${{ secrets.DOCKER_USERNAME }}/node-blog
+              ${{ secrets.DOCKER_USERNAME }}/node-blog:latest
+            # 안 쓰는 오래된 이미지들 정리 (서버 용량 관리)
+            sudo docker image prune -f
