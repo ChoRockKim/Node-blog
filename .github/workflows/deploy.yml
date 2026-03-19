@@ -1,0 +1,36 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [ "main" ] # main 브랜치에 푸시하면 작동
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      # 1. 도커 빌드 & 푸시
+      - name: Docker build & push
+        run: |
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/node-blog .
+          docker push ${{ secrets.DOCKER_USERNAME }}/node-blog
+
+      # 2. EC2 원격 접속 및 실행
+      - name: EC2 Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # 기존에 돌아가던 컨테이너가 있다면 끄고 삭제 (없으면 무시)
+            sudo docker stop my-blog || true
+            sudo docker rm my-blog || true
+            # 최신 이미지 내려받기
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/node-blog
+            # 새 컨테이너 실행 (80포트로 접속하면 내부 8080으로 연결)
+            sudo docker run -d -p 80:8080 --name my-blog \
+              -e MONGODB_URL='${{ secrets.MONGODB_URL }}' \
+              ${{ secrets.DOCKER_USERNAME }}/node-blog
