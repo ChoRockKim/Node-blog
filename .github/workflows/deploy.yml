@@ -11,6 +11,11 @@ jobs:
       # 1. 최신 코드 가져오기 (v4로 업데이트해서 Node 20 경고 해결)
       - name: Checkout code
         uses: actions/checkout@v4
+      
+      - name: Check Secrets
+        run : |
+          if [ -z "${{ secrets.DOCKER_USERNAME }}" ]; then echo "DOCKER_USERNAME is EMPTY"; else echo "DOCKER_USERNAME is SET"; fi
+          if [ -z "${{ secrets.DOCKER_PASSWORD }}" ]; then echo "DOCKER_PASSWORD is EMPTY"; else echo "DOCKER_PASSWORD is SET"; fi
 
       # 2. 도커 허브 로그인 (전용 Action 사용으로 'interactive login' 에러 원천 봉쇄)
       - name: Login to Docker Hub
