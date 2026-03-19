@@ -9,28 +9,55 @@
 <body class="grey-bg">
     <%- include('nav.ejs')%>
     <script src="https://kit.fontawesome.com/e7d0c02666.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <div class="list-header"><span>마이 페이지</span></div>
     <div class="detail-bg" style="font-size: 18px;">
         <!-- 프로필 섹션 -->
             <label class="profile-img-container" for="profile-img-btn">
-                <img class="profile-img" src="/images/profile.png">
+                <img class="profile-img-others" src="<%= userDTO && userDTO.img !== '' ? userDTO.img : '/images/profile.png'%>">
                 <i class="fa-solid fa-plus img-plus-btn"></i>
             </label>
-            <input type="file" name="profileImg" id="profile-img-btn" style="display: none;" accept="image/*">
             <div>
                 <div style="width: 20%; min-width: 200px; margin: auto; margin-top: 20px; text-align: center; font-size: 24px;
                             margin-bottom: 20px;">
-                    유저이름
+                    <%=userDTO.username%>
                 </div>
-                    
-                
             </div>
 
         <div style="width: 200px; margin: auto; text-align: center;">
-            <div style="margin-bottom: 10px;">이메일:<br> 유저 이메일</div>
-            <div style="margin-bottom: 10px;">가입 날짜: 유저 가입날짜</div>
+            <!-- <div style="margin-bottom: 10px;">이메일:<br> 유저 이메일</div> -->
+        <div style="margin-bottom: 10px;">
+            가입 날짜: <%= new Date(userDTO.createdAt).toLocaleDateString('ko-KR', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            }) %>
+        </div>
+            <div style="margin-bottom: 10px;">
+                <button class="send-message-btn">쪽지 보내기</button>
+            </div>
             <div>작성한 글</div>
         </div>
     </div>
+
+<!-- 쪽지 보내기 로직 -->
+<script>
+    document.querySelector('.send-message-btn').addEventListener('click', async () => {
+        if (!'<%=user%>'){
+            alert('로그인하셔야 합니다.')
+            return window.location.href = '/login'
+        }
+        try {
+            const response = await axios.post('/message', {receiver : '<%=userDTO._id%>' , sender : '<%=user?._id%>'})
+            window.location.href = response.data.url;
+        } catch (error) {
+            if(error.response){
+                return alert(error.response.data.message);
+            }
+        }
+
+        
+    })
+</script>
 </body>
 </html>

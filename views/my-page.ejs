@@ -28,7 +28,13 @@
 
         <div style="width: 200px; margin: auto; text-align: center;">
             <div style="margin-bottom: 10px;">이메일:<br> <%= user?.email %></div>
-            <div style="margin-bottom: 10px;">가입 날짜: <%= user?.createdAt%></div>
+            <div style="margin-bottom: 10px;">
+                        가입 날짜: <%= new Date(user?.createdAt).toLocaleDateString('ko-KR', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        }) %>
+            </div>
             <div>작성한 글</div>
         </div>
     </div>

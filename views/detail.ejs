@@ -14,7 +14,7 @@
     <div class="detail-bg">
         <div style="display: flex; align-items: center">
             <div class="detail-profile-img">
-                <img src="<%= post.author.img && post.author.img !== '' ? post.author.img : '/images/profile.png' %>" alt="">
+                <a href="/user/<%=post.author.username%>"><img src="<%= post.author.img && post.author.img !== '' ? post.author.img : '/images/profile.png' %>" alt=""></a>
             </div>
             <p class="no-drag" style="font-size: 19px;"><a href="/user/<%=post.author.username%>"><%= post.author.username %></a></p>
         </div>
@@ -32,8 +32,8 @@
 
         <!-- 댓글 열기/닫기 버튼 -->
         <div class="open-comment">
-            <span class="open-comment-text no-drag">댓글 열기</span>
-            <div class="comment-arrow">▽</div>
+            <span class="open-comment-text no-drag">댓글 닫기</span>
+            <div class="comment-arrow">△</div>
         </div>
         <!-- 댓글 섹션 -->
         <div class="comment-container show">
@@ -47,8 +47,8 @@
                 <%for (let i=0; i<comment.length; i++){%>
                 <div class="comment-box">
                     <div style="display: flex; align-items: center;">
-                        <div class="comment-img"><img src="<%= comment[i].commentor.img !=='' ? comment[i].commentor.img : '/images/profile.png' %>" alt=""></div>
-                        <div><%=comment[i].commentor.username%></div>
+                        <div class="comment-img"><a href="/user/<%=comment[i].commentor.username%>"><img src="<%= comment[i].commentor.img !=='' ? comment[i].commentor.img : '/images/profile.png' %>" alt=""></a></div>
+                        <div><a href="/user/<%=comment[i].commentor.username%>"><%=comment[i].commentor.username%></a></div>
                     </div>
                     <div>
                         <p class="comment-content"><%=comment[i].content%></p>
@@ -62,7 +62,7 @@
                             <div class="comment-menu-btn comment-edit-btn" 
                                 onclick="handleEdit(this, '<%=comment[i]._id%>', `<%= Buffer.from(comment[i].content).toString('base64') %>`, '<%=comment[i].commentor.id%>', '<%=user._id%>')">
                             수정</div>
-                            <div class="comment-menu-btn comment-delete-btn">삭제</div>
+                            <div class="comment-menu-btn comment-delete-btn" onclick="handleDelete('<%=comment[i].commentor.id%>', '<%=comment[i]._id%>')">삭제</div>
                         </div>
                     </div>
                     <%}%>
@@ -141,7 +141,7 @@
         window.location.href = '/edit/<%=post._id%>'
     })
 </script>
-<!-- 댓글 처리 -->
+<!-- 댓글란 보기/숨기기 + 댓글 등록/수정 기능 -->
 <script>
     // 댓글란 보기/숨기기 처리
     let isShown = true;
@@ -207,6 +207,32 @@
             }
         }
     })
+</script>
+<!-- 댓글 삭제 기능 -->
+ <script>
+    const handleDelete = async (userId, commentId) => {
+        if (!'<%=user%>'){
+            alert('로그인하셔야 합니다.')
+            window.location.href = '/login'
+            return
+        }
+        if ('<%=user?._id.toString()%>' != userId.toString()){
+            return alert('권한이 없습니다.')
+        }
+        
+        try {
+            const response = await axios.delete('/detail/comment?commentId=' + commentId)
+            alert(response.data.message)
+            window.location.href = '/detail/<%=post._id%>'
+
+        } catch (error) {
+            if (error.response){
+                return alert(error.response.data.message)
+            }
+        }
+
+    }
+
 </script>
 <!-- 댓글 수정/삭제 박스 열기/닫기 -->
 <script>

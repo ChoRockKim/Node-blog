@@ -3,23 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/styles/main.css">
     <title>Document</title>
+    <link rel="stylesheet" href="/styles/main.css">
 </head>
+<%- include('nav.ejs')%>
+
 <body class="grey-bg">
-    <%- include('nav.ejs')%>
-    <div class="detail-bg">
-        <div class="chat-screen">
-            <div class="chat-box"><span>안녕하세요</span></div>
-            <div class="chat-box"><span>안녕하세요</span></div>
-            <div class="chat-box mine"><span>안녕하세요</span></div>
-        </div>
-        </div>
-        <div class="chat-form">
-        <form action="" style="width: 60%; display: block; margin: auto;">
-            <input class="chat-input">
-            <button class="chat-button">전송</button>
-        </form>
-    </div> 
+  <div class="list-header"><span>게시글</span></div>
+  <div>
+  <div class="white-bg">
+    <%if (room?.length < 1){%>
+          <div class="no-list">쪽지가 없습니다.</div>
+      <%} else {%>
+        
+        <% for (let i=0; i<room?.length; i++){%>
+            <a href="/message/room/<%= room[i]._id %>">
+            <div class="chat-list-box">
+                <!-- 상대방 객체 찾기 -->
+                <% let opponent = room[i].participantInfo.find( users => users._id.toString() !== user._id.toString()) %>
+                <!-- 상대 시간 계산 로직 -->
+                <% 
+                    const now = new Date();
+                    const updatedAt = new Date(room[i].updatedAt);
+                    const diffTime = Math.abs(now - updatedAt); // 밀리초 단위 차이
+                    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+                    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                    let relativeTime = '';
+                    if (diffMinutes < 1) {
+                        relativeTime = '방금 전';
+                    } else if (diffMinutes < 60) {
+                        relativeTime = `${diffMinutes}분 전`;
+                    } else if (diffHours < 24) {
+                        relativeTime = `${diffHours}시간 전`;
+                    } else if (diffDays < 7) {
+                        relativeTime = `${diffDays}일 전`;
+                    } else {
+                        // 7일 이상 지나면 원래 쓰시던 날짜 포맷으로 출력
+                        relativeTime = `${updatedAt.getFullYear()}/${updatedAt.getMonth() + 1}/${updatedAt.getDate()}`;
+                    }
+                %>
+                <div class="flex" style="gap: 10px; align-items: center;">
+                    <div class="chat-list-profile-img">
+                        <img src="<%= opponent.img != '' ? opponent.img : '/images/profile.png' %>">
+                    </div>
+                    <div>
+                        <p class="chat-list-header"><%= opponent.username %></p>
+                        <p class="chat-list-log-box">
+                            <span class="chat-list-log"><%= room[i].lastMessage !== '' ? room[i].lastMessage : '아직 대화가 없습니다.' %></span>
+                            <span style="font-size: 12.5px;"><%= relativeTime %></span>
+                        </p>
+                        <!-- <p style="font-size: 12.5px; margin: 0;"><%= new Date(room[i].updatedAt).toLocaleString('ko-KR', { dateStyle: 'long', timeStyle: 'short' }) %></p> -->
+                    </div>
+                </div>
+                
+            </div>
+            </a>
+        <%}%>
+      <%}%>
+  </div>
+  </div>
+
 </body>
 </html>

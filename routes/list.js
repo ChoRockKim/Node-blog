@@ -17,11 +17,15 @@ function escapeRegExp(string) {
 }
 // 리스트 검색 라우팅
 router.get('/list/search', (req, res)=>{
+    if (!req.query.title.trim()){
+        return res.redirect('/list');
+    }
     res.redirect('/list/search/1?title=' + req.query.title)
 })
 // 리스트 검색 페이지네이션
 router.get('/list/search/:id', async (req, res) => {
     let db = req.db;
+    let query = req.query;
     let keyword = req.query.title || '';
     let safeKeyword = escapeRegExp(keyword);
     const limit = parseInt(6);
@@ -64,7 +68,7 @@ router.get('/list/search/:id', async (req, res) => {
     result.curPage = id;
     result.keyword = keyword; // 검색어 유지용
 
-    res.render('search.ejs', {post : result})
+    res.render('search.ejs', {post : result, query})
 })
 // 글 목록 페이지네이션
 router.get('/list/:id', async (req, res) => {

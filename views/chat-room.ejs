@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles/main.css">
+    <title>Document</title>
+</head>
+<body class="grey-bg">
+    <%- include('nav.ejs')%>
+    <div class="detail-bg">
+        <% 
+            const d = new Date(roomInfo.createdAt);
+            const year = d.getFullYear();
+            const month = d.getDate(); // 날짜
+            const day = d.getMonth() + 1; // 월 (0부터 시작하므로 +1)
+            const hours = d.getHours();
+            const minutes = d.getMinutes();
+            const formattedDate = `${year}년 ${day}월 ${month}일 ${hours}시 ${minutes}분`;
+            const opponentImg = roomInfo.participantInfo.find(u => u._id.toString() !== user._id.toString())?.img || "/images/profile.png";
+            %>
+        <div class="chat-screen" style="max-height: 75vh;">
+        <div class="chat-start-time"><%=formattedDate%></div>
+        <div class="chat-start-time" style="margin-bottom: 15px;">채팅방이 개설되었어요!</div>
+        <div>
+            <div class="chat-start-img">
+                <a href="/user/<%-roomInfo.participantInfo.filter(data => data._id.toString() != user._id.toString())[0].username%>">
+                    <img src="<%=opponentImg%>" alt="프로필이미지">
+                </a>
+            </div>
+            <div class="chat-start-name">
+                <a href="/user/<%-roomInfo.participantInfo.filter(data => data._id.toString() != user._id.toString())[0].username%>">
+                <%-roomInfo.participantInfo.filter(data => data._id.toString() != user._id.toString())[0].username%>
+                </a>
+            </div>
+        </div>
+        <%for (let i=0; i<chatLog.length; i++){%>
+            <%
+            <!-- 시간 변환 -->
+            const now = new Date();
+            const createdAt = new Date(chatLog[i].createdAt);
+            const diffTime = Math.abs(now - createdAt); // 밀리초 단위 차이
+            const diffMinutes = Math.floor(diffTime / (1000 * 60));
+            const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            let relativeTime = '';
+            if (diffMinutes < 1) {
+                relativeTime = '방금 전';
+            } else if (diffMinutes < 60) {
+                relativeTime = `${diffMinutes}분 전`;
+            } else if (diffHours < 24) {
+                relativeTime = `${diffHours}시간 전`;
+            } else if (diffDays < 7) {
+                relativeTime = `${diffDays}일 전`;
+            } else {
+                // 7일 이상 지나면 원래 쓰시던 날짜 포맷으로 출력
+                relativeTime = `${createdAt.getFullYear()}/${createdAt.getMonth() + 1}/${createdAt.getDate()}`;
+            }
+            %>
+            <%if (chatLog[i].senderId.toString() === user._id.toString()){%>
+                <div class="chat-box mine">
+                    <div class="my-chat-time"><%=relativeTime%></div>
+                    <span><%=chatLog[i].content%></span>
+                </div>
+            <%} else {%>
+                <div class="opponent-chat">
+                    <div class="chat-profile-img">
+                        <img src='<%=opponentImg%>'>
+                    </div>
+                    <div class="chat-box">
+                        <span><%=chatLog[i].content%></span>
+                        <p class="chat-time"><%=relativeTime%></p>
+                    </div>
+                </div>
+            <%}%>
+        <%}%>
+            <!-- <div class="chat-box"><span>안녕하세요</span></div> -->
+            <!-- <div class="chat-box"><span>안녕하세요</span></div> -->
+            <!-- <div class="chat-box mine"><span>안녕하세요</span></div> -->
+        </div>
+    </div>
+    <div class="chat-form">
+        <form action="" style="width: 60%; min-width: 350px; display: block; margin: auto; display: flex; align-items: center; margin-top: 10px;">
+            <input class="chat-input"">
+            <button class="chat-button" type="submit" id="submit-msg">전송</button>
+        </form>
+    </div>
+<!-- socket.io 설정 -->
+<script src="https://cdn.jsdelivr.net/npm/socket.io@4.7.2/client-dist/socket.io.min.js"></script>
+<script>
+
+  const opponentImg = '<%= roomInfo.participantInfo.find(u => u._id.toString() !== user._id.toString())?.img || "/images/profile.png" %>';
+  const socket = io()
+  // 방에 입장 시, 룸 개설 요청
+  socket.emit('joinRoom', '<%=roomInfo._id.toString()%>')
+  socket.on('roomOk', msg => {
+    console.log(msg);
+  })
+  // 소켓에 메세지 전송
+  document.querySelector('#submit-msg').addEventListener('click', e => {
+    e.preventDefault();
+    let input = document.querySelector('.chat-input');
+    let msg = input.value;
+    socket.emit('message', {msg, room : '<%=roomInfo._id.toString()%>', sender : '<%=user._id.toString()%>'})
+    input.value = '';
+  })
+  let chatScreen = document.querySelector('.chat-screen');
+  chatScreen.scrollTop = chatScreen.scrollHeight;
+  // 소켓에게 받은 메세지
+  socket.on('sentMessage', data => {
+    console.log(data)
+    let messageDiv = document.createElement("div");
+    if (data.senderId.toString() === '<%=user._id.toString()%>'){
+        messageDiv.classList.add('chat-box');
+        messageDiv.classList.add('mine')
+        messageDiv.innerHTML = `<span>${data.content}</span>`
+    } else {
+        // 상대 시간 계산
+        const now = new Date();
+        const createdAt = new Date(data.createdAt);
+        const diffTime = Math.abs(now - createdAt); // 밀리초 단위 차이
+        const diffMinutes = Math.floor(diffTime / (1000 * 60));
+        const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        let relativeTime = '';
+        if (diffMinutes < 1) {
+            relativeTime = '방금 전';
+        } else if (diffMinutes < 60) {
+            relativeTime = `${diffMinutes}분 전`;
+        } else if (diffHours < 24) {
+            relativeTime = `${diffHours}시간 전`;
+        } else if (diffDays < 7) {
+            relativeTime = `${diffDays}일 전`;
+        } else {
+            // 7일 이상 지나면 원래 쓰시던 날짜 포맷으로 출력
+            relativeTime = `${createdAt.getFullYear()}/${createdAt.getMonth() + 1}/${createdAt.getDate()}`;
+        }
+        messageDiv.classList.add('opponent-chat')
+        messageDiv.innerHTML = `<div class="chat-profile-img">
+                                    <img src="${opponentImg}">
+                                </div>
+                                <div class="chat-box">
+                                    <span>${data.content}</span>
+                                    <p class="chat-time">${relativeTime}</p>
+                                </div>`
+    }
+    chatScreen.appendChild(messageDiv);
+    chatScreen.scrollTop = chatScreen.scrollHeight;
+  })
+
+// 마우스 올리면 시간 보이기 로직
+  let opponentChats = document.querySelectorAll('.opponent-chat')
+  opponentChats.forEach( chat => {
+    let time = chat.querySelector('.chat-time')
+    chat.addEventListener('mouseover', () => {
+        time.classList.toggle('show')
+    })
+    chat.addEventListener('mouseout', () => {
+        time.classList.toggle('show')
+    })
+  })
+  let mines = document.querySelectorAll('.mine');
+  mines.forEach( chat => {
+    let time = chat.querySelector('.my-chat-time');
+    chat.addEventListener('mouseover', () => {
+        time.classList.toggle('show')
+    })
+    chat.addEventListener('mouseout', () => {
+        time.classList.toggle('show')
+    })
+  })
+</script> 
+</body>
+</html>

@@ -14,8 +14,14 @@ const session = require('express-session') // 로그인 세션
 const passport = require('passport')
 const LocalStrategy = require('passport-local')
 const MongoStore = require('connect-mongo').default;
+// socket.io 설정
+const { createServer } = require('http')
+const { Server } = require('socket.io')
+const server = createServer(app)
+const io = new Server(server) 
 
-app.use(session({
+// 세션 미들웨어
+const sessionMiddleware = session({
   secret: process.env.SESSION_KEY, // 세션용 비밀번호
   resave : false,
   saveUninitialized : false,
@@ -24,7 +30,10 @@ app.use(session({
     mongoUrl : `mongodb+srv://daejincnc2:${process.env.DB_PASSWORD}@nodeblog.jreokmg.mongodb.net/?appName=NodeBlog`,
     dbName : 'forum'
   })
-}))
+})
+app.use(sessionMiddleware);
+io.engine.use(sessionMiddleware);
+
 app.use(passport.initialize())
 
 app.use(passport.session())
@@ -34,6 +43,7 @@ const { S3Client } = require('@aws-sdk/client-s3')
 const multer = require('multer')
 const multerS3 = require('multer-s3');
 const connectDB = require('./routes/database');
+const console = require('console');
 const s3 = new S3Client({
   region : 'ap-southeast-2',
   credentials : {
@@ -50,13 +60,14 @@ const upload = multer({
     }
   })
 })
+const PORT = process.env.PORT || 8080;
 // MongoDB 연결
 let db;
 connectDB.then((client)=>{
   console.log('DB연결성공')
   db = client.db('forum')
 
-  app.listen(process.env.PORT, () => {
+  server.listen(PORT, () => {
     console.log('http://localhost:8080 에서 서버 실행중')
   })
 }).catch((err)=>{
@@ -206,8 +217,10 @@ app.delete('/detail', checkLogin, async (req, res) => {
         return res.status(400).send({message:'로그인하셔야 합니다.'})
     }
     const result = await db.collection('post').findOne({ _id : new ObjectId(req.body._id)})
-    if (result.author.email != req.user.email){
-        return res.status(400).send({message:'권한이 없습니다.'})
+    if (req.user.role !== 'admin'){
+        if (result.author.email != req.user.email){
+            return res.status(400).send({message:'권한이 없습니다.'})
+        }
     }
     try {
         db.collection('post').deleteOne({_id : new ObjectId(req.body._id),})
@@ -241,7 +254,7 @@ app.post('/register', async (req, res) => {
     // 이메일 인증되지 않았다면 거부 / 인젝션 방어
     const isVerified = await db.collection('unverifiedUsers').findOne({email : user_data.email})
     if (isVerified.verified === false) {
-        console.log('사용자 이메일 인증 상태', isVerified)
+        // console.log('사용자 이메일 인증 상태', isVerified)
         res.status(400).json({message : '잘못된 요청입니다.'})
         return
     }
@@ -315,7 +328,7 @@ app.post('/api/send-auth-email', async (req, res) => {
         res.status(200).send({message:"인증 메일이 발송되었습니다."})
                 
     } catch (error) {
-        console.log(error)
+        // console.log(error)
         res.status(500).send({message : "인증 메일 발송이 실패하였습니다. 잠시후 다시 시도해주세요."})
     }
 })
@@ -364,7 +377,7 @@ app.get('/logout', (req, res) => {
     // 로그아웃 에러 처리
     req.logout((err) => {
         if (err) {
-            console.log('로그아웃 실패')
+            // console.log('로그아웃 실패')
             return next(err)
         }
     // 세션 없애기
@@ -404,6 +417,46 @@ app.use('/', require('./routes/comment'))
 app.use('/', require('./routes/chat'))
 // 다른 유저 정보 페이지
 app.use('/', require('./routes/user'))
+// 웹소켓 설정
+io.on('connection', (socket)=>{
+    // 룸 개설 요청
+    socket.on('joinRoom', roomId => {
+        socket.join(roomId);
+        io.emit('roomOk', `${roomId} 룸 생성 완료`)
+    })
+    // 메세지 수신 + db 저장
+    socket.on('message', async data => {
+        try {
+            messageDTO = {
+                roomId : new ObjectId(data.room),
+                senderId : new ObjectId(data.sender),
+                content : data.msg,
+                isRead : false,
+                createdAt : new Date()
+            }
+            const result = await db.collection('messages').insertOne(messageDTO);
+            await db.collection('conversations').updateOne({ _id : new ObjectId(data.room)}, { $set : { lastMessage : data.msg, updatedAt : new Date()}})            
+            const broadcastMsg = {
+                ...messageDTO,
+                messageId : result.insertedId
+            }
+            console.log(broadcastMsg)
+            io.to(data.room).emit('sentMessage', broadcastMsg);
+            console.log('저장 함')
+
+        } catch (error) {
+            console.log('저장 실패함', error)
+            
+        }
+    })
+
+})
+
+// 만드는 과정 정리 
+// 1. 채팅방에 들어갈 시 룸 생성(conversations id)
+// 2. 채팅을 입력(해당 유저 정보 + 메시지 -> 룸으로 전달)
+// 3. DB에 저장(부모ID = RoomId, 유저객체, 메시지 내용, 보낸날짜), session = socket.request.session 에 세션 정보 들어있음
+// 4. DB에 저장한 메시지를 날려주기
 
 // 400 에러처리 미들웨어
 app.use((req, res, next) => {

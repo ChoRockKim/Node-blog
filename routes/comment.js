@@ -46,4 +46,24 @@ router.patch('/detail/comment', async (req, res) => {
     
 });
 
+//댓글 삭제 처리
+router.delete('/detail/comment', async (req, res) => {
+    let db = req.db;
+    if (!req.user){
+        res.status(400).json({message : '로그인하셔야 합니다.'})
+    }
+    try {
+        const result = await db.collection('comments').findOne({ _id : new ObjectId(req.query.commentId)})
+        if (result.commentor.id.toString() != req.user._id.toString()){
+            return res.status(400).json({message : "권한이 없습니다."})
+        }
+        const deleted = await db.collection('comments').deleteOne({ _id : new ObjectId(req.query.commentId) })
+        return res.status(200).json({message:'댓글이 삭제되었습니다.'})
+    } catch (error) {
+        return res.status(500).json({message:'네트워크 오류'})
+    }
+
+});
+
+
 module.exports = router;
