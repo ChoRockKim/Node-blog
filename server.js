@@ -33,7 +33,6 @@ const sessionMiddleware = session({
 })
 app.use(sessionMiddleware);
 io.engine.use(sessionMiddleware);
-
 app.use(passport.initialize())
 
 app.use(passport.session())
