@@ -27,7 +27,7 @@ const sessionMiddleware = session({
   saveUninitialized : false,
   cookie : { maxAge : 60 * 60 * 1000 },
   store : MongoStore.create({ // mongodb와 세션 연결
-    mongoUrl : `mongodb+srv://daejincnc2:${process.env.DB_PASSWORD}@nodeblog.jreokmg.mongodb.net/?appName=NodeBlog`,
+    mongoUrl : `mongodb+srv://daejincnc2:${process.env.MONGODB_URL}@nodeblog.jreokmg.mongodb.net/?appName=NodeBlog`,
     dbName : 'forum'
   })
 })
