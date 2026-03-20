@@ -45,6 +45,7 @@ jobs:
             sudo docker rm my-blog || true
             sudo docker run -d -p 80:8080 --name my-blog \
               -e DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
+              -e SESSION_SECRET='${{ secrets.SESSION_SECRET }}' \
               ${{ secrets.DOCKER_USERNAME }}/node-blog:latest
             # 안 쓰는 오래된 이미지들 정리 (서버 용량 관리)
             sudo docker image prune -f

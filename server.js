@@ -22,7 +22,7 @@ const io = new Server(server)
 
 // 세션 미들웨어
 const sessionMiddleware = session({
-  secret: process.env.SESSION_KEY, // 세션용 비밀번호
+  secret: process.env.SESSION_SECRET, // 세션용 비밀번호
   resave : false,
   saveUninitialized : false,
   cookie : { maxAge : 60 * 60 * 1000 },
