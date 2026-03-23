@@ -1,18 +1,46 @@
-    <div class="nav no-drag">
-        <div>
-            <a class="logo" href="/list">초록</a>
-            <a href="/list">글 목록</a>
-            <%if (user){%>
-                <a href="/write">글 작성</a>
-                <a href="/message/list">쪽지</a>
-            <%}%>
-        </div>
-        <div>
-        <% if (!user) {%>
-            <a href="/login">로그인</a>
-        <%} else {%>
-            <a href="/logout">로그아웃</a>
-            <a href="/my-page">마이페이지</a>
+<script src="https://kit.fontawesome.com/e7d0c02666.js" crossorigin="anonymous"></script>
+<div class="nav no-drag">
+    <a class="logo" href="/list">초록</a>
+    <div class="nav-container">
+    <div class="nav-list">
+        <a href="/list">글 목록</a>
+        <%if (user){%>
+            <a href="/write">글 작성</a>
+            <a href="/message/list">쪽지</a>
         <%}%>
+    </div>
+    <div class="nav-list">
+    <% if (!user) {%>
+        <a href="/login">로그인</a>
+    <%} else {%>
+        <a href="/logout">로그아웃</a>
+        <a href="/my-page">마이페이지</a>
+    <%}%>
+    </div>
+        <div class="nav-list-mobile">
+            <i class="fa-solid fa-bars menu-btn no-drag"></i>
+        </div>
+        <div class="nav-list-mobile-content">
+            <ul>
+                <li><a href="/list">글 목록</a></li>
+                <%if (user){%>
+                    <li><a href="/write">글 작성</a></li>
+                    <li><a href="/message/list">쪽지</a></li>
+                    <li><a href="/logout">로그아웃</a></li>
+                    <li><a href="/my-page">마이페이지</a></li>
+                <%}%>
+                <% if (!user) {%>
+                    <li><a href="/login">로그인</a></li>
+                <%}%>
+            </ul>
         </div>
     </div>
+</div>
+
+<script>
+    const menuBtn = document.querySelector('.menu-btn')
+    const menuBar = document.querySelector('.nav-list-mobile-content')
+    menuBtn.addEventListener('click', () => {
+        menuBar.classList.toggle('show')
+    })
+</script>
