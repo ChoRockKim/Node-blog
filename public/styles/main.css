@@ -60,6 +60,7 @@ a:hover {
   width: 100%;
   top: 100%;
   right: 0;
+  z-index: 20;
 }
 
 .nav-list-mobile-content ul {
