@@ -4,6 +4,7 @@ require('dotenv').config(); // .env파일
 const { MongoClient, ObjectId } = require('mongodb')
 const bcrypt = require('bcrypt'); //비밀번호 해싱
 const nodemailer = require('nodemailer'); //메일 인증
+const sharp = require('sharp'); // 이미지 압축
 
 app.use(express.static(__dirname + '/public'))
 app.set('view engine', 'ejs')
@@ -38,27 +39,21 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 // S3 연결 설정
-const { S3Client } = require('@aws-sdk/client-s3')
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3')
 const multer = require('multer')
 const multerS3 = require('multer-s3');
 const connectDB = require('./routes/database');
 const console = require('console');
-const s3 = new S3Client({
+const s3Client = new S3Client({
   region : 'ap-southeast-2',
   credentials : {
       accessKeyId : process.env.S3_ACCESS_KEY,
       secretAccessKey : process.env.S3_ACCESS_SECRET_KEY
   }
 })
-const upload = multer({
-  storage: multerS3({
-    s3: s3,
-    bucket: 'nodeblogforum0530',
-    key: function (req, file, cb) {
-      cb(null, Date.now().toString()) //업로드시 파일명 변경가능
-    }
-  })
-})
+const upload = multer({ storage: multer.memoryStorage() });
+
+
 const PORT = process.env.PORT || 8080;
 // MongoDB 연결
 let db;
@@ -136,33 +131,48 @@ app.get('/write', (req, res) => {
     res.render('write.ejs')
 })
 //글 작성 로직
-app.post('/newpost', checkLogin, async (req, res) => {    
-    upload.single('img1')(req, res, async (err) => {
-        // 이미지 업로드 에러 처리
-        if (err) return res.status(500).send({message : '이미지 업로드에 실패하였습니다.'})
-            try {
-                let post = req.body;
-                post.img = req.file?.location
-                // 임베딩 시킬 작성자 객체 생성
-                let author = {
-                    username : req.user.username,
-                    email : req.user.email,
-                    img : req.user.img
-                }
-                post.createdAt = new Date();
-                post.author = author;
-                //유효성 검사
-                if (!post.title.trim() || !post.content.trim()){
-                    res.status(400).send({ message : '모든 칸을 채워주세요!' })
-                    return
-                }
-                const result = await db.collection('post').insertOne(post)
-            } 
-            catch (error) {
-                res.status(500).send({ message : error })
-            }
-            res.status(200).send({ message : '글을 작성하였습니다.' })        
-    })
+app.post('/newpost', checkLogin, upload.single('img1'), async (req, res) => {    
+    try {
+        let post = req.body;
+        let imageUrl = null;
+        // 이미지 최적화
+        if (req.file) {
+            const optimizedBuffer = await sharp(req.file.buffer)
+                .resize(1200, null, { withoutEnlargement: true })
+                .webp({ quality: 80 })
+                .toBuffer();
+            const fileName = `posts/${Date.now()}-${req.user.username}.webp`;
+            const params = {
+                Bucket: "nodeblogforum0530",
+                Key: fileName,
+                Body: optimizedBuffer,
+                ContentType: "image/webp",
+            };
+
+            await s3Client.send(new PutObjectCommand(params));
+            imageUrl = `https://nodeblogforum0530.s3.ap-southeast-2.amazonaws.com/${fileName}`;
+        }
+        post.img = imageUrl;
+        post.createdAt = new Date();
+        post.author = {
+            username: req.user.username,
+            email: req.user.email,
+            img: req.user.img
+        };
+
+        // 유효성 검사
+        if (!post.title.trim() || !post.content.trim()) {
+            return res.status(400).send({ message: '모든 칸을 채워주세요!' });
+        }
+
+        // DB 저장
+        await db.collection('post').insertOne(post);
+        res.status(200).send({ message: '글을 작성하였습니다.' });
+
+    } catch (error) {
+        console.error("에러 발생:", error);
+        res.status(500).send({ message: '서버 에러가 발생했습니다.' });
+    }
 })
 // 글 세부사항 페이지 렌더링
 app.get('/detail/:id', async (req, res) => {
@@ -394,23 +404,43 @@ app.get('/my-page', (req, res) => {
     res.render('my-page.ejs')
 })
 // 마이 페이지 프로필 사진 업로드 로직
-app.post('/my-page/img', async (req, res) => {    
-    upload.single('profileImg')(req, res, async (err) => {
-        // 이미지 업로드 에러 처리
-        if (err) return res.status(500).send({message : '이미지 업로드에 실패하였습니다.'})
-            try {
-                // 현재 로그인한 유저를 찾아서
-                const user = await db.collection('users').findOne({ _id : new ObjectId(req.user._id) })
-                // S3 이미지 위치를 추가한 후 
-                user.img = req.file?.location;
-                // 유저 인스턴스를 업데이트
-                await db.collection('users').updateOne({_id : new ObjectId(user._id)}, { $set : { img : user.img}})
-                return res.status(200).json({message : '사진 업로드 성공', url : user.img})
-            } catch (error) {
-                return res.status(500).json({message : '사진 업로드 실패'})
-            }
-    })
-})
+app.post('/my-page/img', checkLogin, upload.single('profileImg'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).send({ message: '업로드할 파일이 없습니다.' });
+        }
+        // Sharp를 이용한 프로필 이미지 최적화
+        const optimizedBuffer = await sharp(req.file.buffer)
+            .resize(300, 300, { fit: 'cover', position: 'center' }) 
+            .webp({ quality: 80 })
+            .toBuffer();
+        // S3 파일명 설정 
+        const fileName = `profiles/${req.user._id}-${Date.now()}.webp`;
+        // AWS S3에 업로드
+        const params = {
+            Bucket: "nodeblogforum0530",
+            Key: fileName,
+            Body: optimizedBuffer,
+            ContentType: "image/webp",
+        };
+        await s3Client.send(new PutObjectCommand(params));
+        // 업로드된 새 이미지 URL 생성
+        const newImageUrl = `https://nodeblogforum0530.s3.ap-southeast-2.amazonaws.com/${fileName}`;
+        //  DB 업데이트
+        await db.collection('users').updateOne(
+            { _id: new ObjectId(req.user._id) },
+            { $set: { img: newImageUrl } }
+        );
+        return res.status(200).json({ 
+            message: '사진 업로드 성공', 
+            url: newImageUrl 
+        });
+
+    } catch (error) {
+        console.error("프로필 업로드 에러:", error);
+        return res.status(500).json({ message: '사진 업로드 실패' });
+    }
+});
 app.use('/', require('./routes/comment'))
 // 채팅방 라우터
 app.use('/', require('./routes/chat'))
