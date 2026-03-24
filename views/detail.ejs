@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>초록</title>
     <link rel="stylesheet" href="/styles/main.css">
 </head>
 <%- include('nav.ejs')%>
@@ -26,8 +26,8 @@
         <!-- 작성자가 아니거나 관리자가 아니라면 수정/삭제 버튼 숨기기 -->
         <% if (user?.email == post.author.email || user?.role == 'admin') {%>
         <div style="cursor: pointer;">
-            <a style="text-decoration: underline;" id="edit-btn">글 수정</a> 
-            <span id="delete-btn" style="text-decoration: underline;">글 삭제</span>
+            <a class="document-handle" style="text-decoration: underline;" id="edit-btn">글 수정</a> 
+            <span class="document-handle" id="delete-btn" style="text-decoration: underline;">글 삭제</span>
         </div><%}%>
 
         <!-- 댓글 열기/닫기 버튼 -->
@@ -55,7 +55,7 @@
                         <span class="comment-date"><%= new Date(comment[i].createdAt).toLocaleString('ko-KR', { dateStyle: 'long', timeStyle: 'short' }) %></span>
                     </div>
                     <!-- 댓글 수정/삭제 박스 -->
-                    <%if (user?._id.toString() == comment[i].commentor.id.toString()){%>
+                    <%if (user?._id.toString() == comment[i].commentor.id.toString() || user?.role === 'admin'){%>
                     <div class="comment-menu">
                         <i class="fa-solid fa-bars menu-btn"></i>
                         <div class="comment-menu-box menu-box">
@@ -216,10 +216,12 @@
             window.location.href = '/login'
             return
         }
-        if ('<%=user?._id.toString()%>' != userId.toString()){
+        
+        if ('<%=user?.role%>' !== "admin"){
+            if ('<%=user?._id.toString()%>' != userId.toString()){
             return alert('권한이 없습니다.')
         }
-        
+        }
         try {
             const response = await axios.delete('/detail/comment?commentId=' + commentId)
             alert(response.data.message)

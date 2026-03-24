@@ -54,8 +54,10 @@ router.delete('/detail/comment', async (req, res) => {
     }
     try {
         const result = await db.collection('comments').findOne({ _id : new ObjectId(req.query.commentId)})
-        if (result.commentor.id.toString() != req.user._id.toString()){
-            return res.status(400).json({message : "권한이 없습니다."})
+        if (req.user.role !== 'admin'){
+            if (result.commentor.id.toString() != req.user._id.toString()){
+                return res.status(400).json({message : "권한이 없습니다."})
+            }
         }
         const deleted = await db.collection('comments').deleteOne({ _id : new ObjectId(req.query.commentId) })
         return res.status(200).json({message:'댓글이 삭제되었습니다.'})

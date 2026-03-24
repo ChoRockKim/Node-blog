@@ -588,6 +588,7 @@ a:hover {
   top: 0;
   right: 0;
   cursor: pointer;
+  z-index: 10;
 }
 
 .comment-menu-box {
@@ -827,7 +828,7 @@ a:hover {
   }
   .detail-content{
     font-size: 12px;
-    line-height: 1.65;
+    line-height: 1.8;
   }
   .detail-title {
     font-size: 18px;
@@ -855,4 +856,31 @@ a:hover {
   .comment-write {
     font-size: 13px
   }
+  .comment-menu-btn {
+    font-size: 13px;
+  }
+  .comment-menu-box {
+  width: 45px;
+  height: 55px;
+  }
+  .menu-btn {
+    font-size: 13px;
+  }
+  .document-handle {
+    font-size: 13px;
+  }
+  .open-comment {
+    width: 72px;
+    height: 24px;
+  }
+  .open-comment-text {
+    font-size: 12px;
+  }
+  .comment-arrow {
+    font-size: 12px;
+  }
+  .comment-submit-btn {
+    font-size: 11px;
+    padding: 6px;
+  } 
 }
