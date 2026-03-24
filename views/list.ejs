@@ -10,13 +10,13 @@
 
 <body class="grey-bg">
   <div class="list-header"><span>게시글</span></div>
-  <div>
+  <div style="width: 100%;">
   <div class="white-bg">
     <%if (post?.length < 1){%>
           <div class="no-list">게시글이 없습니다.</div>
       <%} else {%>
       <% for (let i=0; i < post.length; i++){%>
-        <a href="/detail/<%= post[i]._id%>">
+        <a class="list-box-container" href="/detail/<%= post[i]._id%>">
           <div class="list-box">
             <div style="display: flex; align-items: center">
               <span class="list-profile-img-container">

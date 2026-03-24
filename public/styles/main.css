@@ -177,7 +177,7 @@ a:hover {
 }
 
 .form-box button {
-  padding: 10px;
+  padding: 7px;
   border : none;
   background : lightgrey;
   border-radius: 5px;
@@ -884,4 +884,34 @@ a:hover {
     font-size: 11px;
     padding: 6px;
   } 
+  .detail-bg {
+    width: 100%;
+    margin-top: 5px;
+  }
+  .list-header {
+    width: 100%;
+  }
+  .white-bg {
+    padding-left: 0;
+    padding-right: 0;
+    width: 100%;
+  }
+  .nav {
+    height: 40px;
+  }
+  .form-box {
+    width: 100%;
+    margin-top: 5px;
+  }
+  .write-submit-btn {
+    width: 40px;
+    height: 30px;
+    align-content: center;
+    text-align: center;
+    padding: 5px !important;
+  }
+  .register-box {
+    width: 100%;
+    margin-top: 5px;
+  }
 }
