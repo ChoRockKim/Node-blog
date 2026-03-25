@@ -176,12 +176,19 @@ a:hover {
   height: 400px;
   resize: none;
 }
+.write-submit-btn {
+  margin-top: 10px;
+}
 
-.form-box button {
+.form-box button:not([class*="toastui"]) {
   padding: 7px;
   border: none;
   background: lightgrey;
   border-radius: 5px;
+}
+
+.toastui-editor-tooltip {
+  opacity: 0.6 !important;
 }
 
 .detail-bg {
@@ -817,7 +824,7 @@ a:hover {
   display: block;
 }
 
-/* 여기부터는 미디어쿼리 */
+/* ============================ 여기부터는 미디어쿼리 =================================*/
 
 @media (max-width: 480px) {
   .nav-container {
@@ -839,6 +846,17 @@ a:hover {
   }
   .detail-title {
     font-size: 18px;
+  }
+  .markdown-body img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 20px auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  .markdown-body {
+    background-color: transparent !important;
   }
   .comment-content {
     font-size: 13px;
@@ -928,5 +946,32 @@ a:hover {
   }
   .detail-img {
     width: 100%;
+  }
+}
+
+/* 모바일 화면(너비 768px 미만)에서만 적용 */
+@media (max-width: 767px) {
+  /* 1. 팝업창 전체 너비 조절 */
+  .toastui-editor-popup {
+    width: 90% !important; /* 화면 너비의 90%만 차지하게 */
+    max-width: 350px !important; /* 너무 커지지 않게 최대치 제한 */
+    left: 50% !important; /* 왼쪽에서 50% 지점으로 이동 */
+    transform: translateX(-50%) !important; /* 정확히 중앙 정렬 */
+    margin-left: 0 !important; /* 기존 에디터의 마진 설정 무력화 */
+  }
+
+  /* 2. 팝업 내부의 입력창(URL 입력 등) 너비 조절 */
+  .toastui-editor-popup input {
+    width: 100% !important; /* 입력창이 팝업 밖으로 나가지 않게 */
+    box-sizing: border-box; /* 패딩이 너비에 포함되도록 */
+  }
+
+  /* 3. 파일 선택 버튼 등 내부 요소 정렬 */
+  .toastui-editor-file-select-button {
+    width: 100% !important; /* 버튼도 시원하게 꽉 채우기 */
+    margin-bottom: 10px;
+  }
+  .toastui-editor-tooltip {
+    display: none !important;
   }
 }

@@ -25,7 +25,7 @@
               <p style="margin: none; display: block; font-size: 14px;"><%= post[i].author.username%></p>
             </div>
             <h4><%= post[i].title%></h4>
-            <p><%= post[i].content%></p>
+            <p><%= post[i].summary != '' && post[i].summary ? post[i].summary : post[i].content%></p>
             <p style="font-size: 12.5px;"><%= new Date(post[i].createdAt).toLocaleString('ko-KR', { dateStyle: 'long', timeStyle: 'short' }) %></p>
           </div>
         </a>

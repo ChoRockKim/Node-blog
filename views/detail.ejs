@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>초록</title>
     <link rel="stylesheet" href="/styles/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-light.min.css" />
 </head>
 <%- include('nav.ejs')%>
 <body class="grey-bg">
@@ -19,7 +20,7 @@
             <p class="no-drag" style="font-size: 19px;"><a href="/user/<%=post.author.username%>"><%= post.author.username %></a></p>
         </div>
         <h4 class="detail-title"><%= post.title%></h4>
-        <p  class="detail-content"><%= post.content %></p>
+        <div  class="detail-content markdown-body"><%- contentHtml %></div>
         <img class="detail-img" src= "<%= post.img !== null ? encodeURI(post.img) : '' %>" >
         <p style="font-size: 14px; margin-bottom: 15px; color: rgba(0,0,0,0.6);"><%= new Date(post.createdAt).toLocaleString('ko-KR', { dateStyle: 'long', timeStyle: 'short' }) %></p>
         

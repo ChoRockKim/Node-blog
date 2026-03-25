@@ -1,58 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+
     <title>초록</title>
-    <link rel="stylesheet" href="/styles/main.css">
-</head>
-<%- include('nav.ejs')%>
-<body class="grey-bg">
-    <form class="form-box" action="/newpost", method="POST">
-        <h4>글 작성</h4>
-        <input class="write-title" name="title" type="text" placeholder="제목을 입력해주세요">
-        <textarea class="write-content" name="content" type="text" placeholder="내용을 입력해주세요"></textarea>
-        <input style="display: block; margin-bottom: 10px;" type="file" name="img1" accept="image/*" multiple>
-        <button class="write-submit-btn" id="submit-btn" type="submit" >전송</button>
+    <link rel="stylesheet" href="/styles/main.css" />
+    <link
+      rel="stylesheet"
+      href="https://uicdn.toast.com/editor/latest/toastui-editor.css"
+    />
+  </head>
+  <body class="grey-bg">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <%- include('nav.ejs')%>
+    <form class="form-box" action="/newpost" , method="POST">
+      <h4>글 작성</h4>
+      <input
+        class="write-title"
+        name="title"
+        type="text"
+        placeholder="제목을 입력해주세요"
+      />
+      <div id="editor"></div>
+      <!-- <textarea
+        class="write-content"
+        name="content"
+        type="text"
+        placeholder="내용을 입력해주세요"
+      ></textarea> -->
+      <!-- <input
+        style="display: block; margin-bottom: 10px"
+        type="file"
+        name="img1"
+        accept="image/*"
+        multiple
+      /> -->
+      <button class="write-submit-btn" id="submit-btn" type="submit">
+        전송
+      </button>
     </form>
 
-<script>
-    document.querySelector('.form-box').addEventListener('submit', (e) => {
-        e.preventDefault();
-    })
-    // 글 작성 로직
-    document.querySelector('#submit-btn').addEventListener('click', async () => {
-        const title = document.querySelector('.write-title').value;
-        const content = document.querySelector('.write-content').value;
-        const fileInput = document.querySelector('input[name="img1"]');
-        const file = fileInput.files[0]; // 선택된 첫 번째 파일
-        // FormData 객체 생성
-        const formData = new FormData();
-        formData.append('title', title);
-        formData.append('content', content);
-        if (file) {
-            formData.append('img1', file); // 파일 추가
+    <!--  TOAST UI Editor CDN  -->
+    <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+    <!-- 한국어 패치 -->
+    <script src="https://uicdn.toast.com/editor/latest/i18n/ko-kr.min.js"></script>
+    <!-- Toast UI 정의 -->
+    <script>
+      const getToolbarItems = () => {
+        if (window.innerWidth < 768) {
+          return [["bold", "italic"], ["image"], ["link"]];
+        } else {
+          return [
+            ["heading", "bold", "italic", "strike"],
+            ["hr", "quote"],
+            ["image", "link"],
+            ["code", "codeblock"],
+          ];
         }
-        try {
-            const response = await fetch('/newpost', {method : 'POST', body : formData});
-            const result = await response.json();
-            if (response.ok) {
-                alert(result.message)
-                console.log(response)
-                window.location.href = '/list';
-            } else {
-                alert(result.message);
+      };
+
+      const Editor = toastui.Editor;
+      const editor = new Editor({
+        el: document.querySelector("#editor"),
+        height: "600px",
+        initialEditType: "markdown",
+        toolbarItems: getToolbarItems(),
+        previewStyle: "tab",
+        placeholder: "내용을 입력해주세요",
+        language: "ko-KR",
+        hooks: {
+          async addImageBlobHook(blob, callback) {
+            console.log("이미지 업로드 됨");
+            try {
+              const formData = new FormData();
+              formData.append("img1", blob);
+
+              const response = await axios.post("/upload-image", formData);
+              console.log(response);
+              callback(response.data.url, "image");
+            } catch (error) {
+              if (error.response) {
+                alert(error.response.data.message);
+              }
             }
+          },
+        },
+      });
+    </script>
+    <!-- 글 작성 로직 -->
+    <script>
+      document.querySelector(".form-box").addEventListener("submit", (e) => {
+        e.preventDefault();
+      });
 
-        } catch (e) {
-            alert(e);
-            console.log(e);
+      document
+        .querySelector("#submit-btn")
+        .addEventListener("click", async () => {
+          const title = document.querySelector(".write-title").value;
+          const content = editor.getMarkdown();
+          const formData = new FormData();
+          formData.append("title", title);
+          formData.append("content", content);
 
-        }
+          try {
+            const { data } = await axios.post("/newpost", formData);
+            alert(data.message);
+            window.location.href = "/";
+          } catch (error) {
+            if (error.response) {
+              alert(error.response.data.message);
+            }
+          }
+        });
 
-    })
-
-</script>
-
-</body>
+      //   document.querySelector(".form-box").addEventListener("submit", (e) => {
+      //     e.preventDefault();
+      //   });
+      // 글 작성 로직
+      //   document
+      //     .querySelector("#submit-btn")
+      //     .addEventListener("click", async () => {
+      //       const title = document.querySelector(".write-title").value;
+      //       const content = document.querySelector(".write-content").value;
+      //       const fileInput = document.querySelector('input[name="img1"]');
+      //       const file = fileInput.files[0]; // 선택된 첫 번째 파일
+      //       // FormData 객체 생성
+      //       const formData = new FormData();
+      //       formData.append("title", title);
+      //       formData.append("content", content);
+      //       if (file) {
+      //         formData.append("img1", file); // 파일 추가
+      //       }
+      //       try {
+      //         const response = await fetch("/newpost", {
+      //           method: "POST",
+      //           body: formData,
+      //         });
+      //         const result = await response.json();
+      //         if (response.ok) {
+      //           alert(result.message);
+      //           console.log(response);
+      //           window.location.href = "/list";
+      //         } else {
+      //           alert(result.message);
+      //         }
+      //       } catch (e) {
+      //         alert(e);
+      //         console.log(e);
+      //       }
+      //     });
+    </script>
+  </body>
 </html>
