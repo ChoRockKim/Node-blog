@@ -511,7 +511,7 @@ app.post(
       // Sharp를 이용한 프로필 이미지 최적화
       const optimizedBuffer = await sharp(req.file.buffer)
         .resize(300, 300, { fit: "cover", position: "center" })
-        .webp({ quality: 80 })
+        .webp({ quality: 90 })
         .toBuffer();
       // S3 파일명 설정
       const fileName = `profiles/${req.user._id}-${Date.now()}.webp`;
