@@ -20,7 +20,7 @@
         </div>
         <h4 class="detail-title"><%= post.title%></h4>
         <p  class="detail-content"><%= post.content %></p>
-        <img style="display: block; width: 75%; margin: auto; margin-bottom: 30px;" src= "<%= post.img !== null ? encodeURI(post.img) : '' %>" >
+        <img class="detail-img" src= "<%= post.img !== null ? encodeURI(post.img) : '' %>" >
         <p style="font-size: 14px; margin-bottom: 15px; color: rgba(0,0,0,0.6);"><%= new Date(post.createdAt).toLocaleString('ko-KR', { dateStyle: 'long', timeStyle: 'short' }) %></p>
         
         <!-- 작성자가 아니거나 관리자가 아니라면 수정/삭제 버튼 숨기기 -->
