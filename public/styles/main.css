@@ -189,6 +189,19 @@ a:hover {
 
 .toastui-editor-tooltip {
   opacity: 0.6 !important;
+  z-index: 100;
+}
+/* 기본 blockquote 디자인을 노션 콜아웃으로 변경 */
+.markdown-body blockquote {
+  margin: 1em 0;
+  padding: 16px 20px !important;
+  background-color: #f1f1f1 !important; /* 연회색 배경 */
+  border-left: none !important; /* 기존의 왼쪽 선 제거 */
+  border-radius: 6px; /* 모서리 둥글게 */
+  display: flex;
+  align-items: flex-start;
+  color: #37352f;
+  gap: 12px;
 }
 
 .detail-bg {
@@ -204,7 +217,7 @@ a:hover {
 }
 
 .detail-title {
-  font-size: 22px;
+  font-size: 30px;
   min-height: 60px;
   margin: 0;
   margin-top: 10px;
@@ -228,11 +241,29 @@ a:hover {
 
 .detail-content {
   font-size: 17px;
-  line-height: 1.5;
-  font-weight: 600;
+  line-height: 1.7 !important;
   white-space: pre-wrap;
 }
 
+.detail-content h1 {
+  margin: 0 !important;
+}
+.detail-content h2 {
+  margin: 0 !important;
+}
+.detail-content h3 {
+  margin: 0 !important;
+}
+.detail-content h4 {
+  margin: 0 !important;
+}
+.detail-content p {
+  margin: 0 !important;
+}
+.detail-content li {
+  margin: 0 !important;
+  line-height: 1.2 !important;
+}
 .page-btn-container {
   width: 50%;
   min-width: 350px;
@@ -841,11 +872,18 @@ a:hover {
     cursor: pointer;
   }
   .detail-content {
-    font-size: 12px;
     line-height: 1.8;
   }
+
+  .detail-content p,
+  .detail-content li,
+  .detail-content blockquote,
+  .detail-content strong {
+    font-size: 14px;
+  }
+
   .detail-title {
-    font-size: 18px;
+    font-size: 25px;
   }
   .markdown-body img {
     max-width: 100%;
@@ -858,8 +896,9 @@ a:hover {
   .markdown-body {
     background-color: transparent !important;
   }
+
   .comment-content {
-    font-size: 13px;
+    font-size: 14px;
   }
   .comment-date {
     font-size: 12px;
@@ -879,20 +918,20 @@ a:hover {
     font-size: 14px;
   }
   .comment-write {
-    font-size: 13px;
+    font-size: 14px;
   }
   .comment-menu-btn {
-    font-size: 13px;
+    font-size: 14px;
   }
   .comment-menu-box {
     width: 45px;
     height: 55px;
   }
   .menu-btn {
-    font-size: 13px;
+    font-size: 14px;
   }
   .document-handle {
-    font-size: 13px;
+    font-size: 14px;
   }
   .open-comment {
     width: 72px;
@@ -905,7 +944,7 @@ a:hover {
     font-size: 12px;
   }
   .comment-submit-btn {
-    font-size: 13px;
+    font-size: 14px;
     padding: 6px;
   }
   .detail-bg {

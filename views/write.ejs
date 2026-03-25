@@ -77,6 +77,35 @@
           },
         },
       });
+      editor.on("change", () => {
+        const content = editor.getMarkdown();
+        const title = document.querySelector(".write-title").value;
+        const tempData = {
+          title,
+          content,
+          savedAt: new Date().toLocaleString(),
+        };
+        localStorage.setItem("temp_post", JSON.stringify(tempData));
+      });
+
+      window.onload = () => {
+        const savedData = localStorage.getItem("temp_post");
+
+        if (savedData) {
+          const parsedData = JSON.parse(savedData);
+
+          const confirmReceiver = confirm(
+            "작성 중이던 글이 있습니다. 불러오시겠습니까?",
+          );
+          if (confirmReceiver) {
+            document.querySelector(".write-title").value = parsedData.title;
+            editor.setMarkdown(parsedData.content);
+            alert("글을 불러왔습니다.");
+          } else {
+            localStorage.removeItem("temp_post");
+          }
+        }
+      };
     </script>
     <!-- 글 작성 로직 -->
     <script>
@@ -96,6 +125,7 @@
           try {
             const { data } = await axios.post("/newpost", formData);
             alert(data.message);
+            localStorage.removeItem("temp_post");
             window.location.href = "/";
           } catch (error) {
             if (error.response) {
@@ -103,43 +133,6 @@
             }
           }
         });
-
-      //   document.querySelector(".form-box").addEventListener("submit", (e) => {
-      //     e.preventDefault();
-      //   });
-      // 글 작성 로직
-      //   document
-      //     .querySelector("#submit-btn")
-      //     .addEventListener("click", async () => {
-      //       const title = document.querySelector(".write-title").value;
-      //       const content = document.querySelector(".write-content").value;
-      //       const fileInput = document.querySelector('input[name="img1"]');
-      //       const file = fileInput.files[0]; // 선택된 첫 번째 파일
-      //       // FormData 객체 생성
-      //       const formData = new FormData();
-      //       formData.append("title", title);
-      //       formData.append("content", content);
-      //       if (file) {
-      //         formData.append("img1", file); // 파일 추가
-      //       }
-      //       try {
-      //         const response = await fetch("/newpost", {
-      //           method: "POST",
-      //           body: formData,
-      //         });
-      //         const result = await response.json();
-      //         if (response.ok) {
-      //           alert(result.message);
-      //           console.log(response);
-      //           window.location.href = "/list";
-      //         } else {
-      //           alert(result.message);
-      //         }
-      //       } catch (e) {
-      //         alert(e);
-      //         console.log(e);
-      //       }
-      //     });
     </script>
   </body>
 </html>

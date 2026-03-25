@@ -1,10 +1,9 @@
 const express = require("express");
 const app = express();
 require("dotenv").config(); // .env파일
-const { MongoClient, ObjectId } = require("mongodb");
+const { ObjectId } = require("mongodb");
 const bcrypt = require("bcrypt"); //비밀번호 해싱
 const nodemailer = require("nodemailer"); //메일 인증
-const sharp = require("sharp"); // 이미지 압축
 
 app.use(express.static(__dirname + "/public"));
 app.set("view engine", "ejs");
@@ -20,6 +19,9 @@ const session = require("express-session"); // 로그인 세션
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const MongoStore = require("connect-mongo").default;
+const checkLogin = require("./middlewares/checkLogin");
+const generateRandomCode = require("./utils/generateRandomCode");
+
 // socket.io 설정
 const { createServer } = require("http");
 const { Server } = require("socket.io");
@@ -41,23 +43,11 @@ const sessionMiddleware = session({
 app.use(sessionMiddleware);
 io.engine.use(sessionMiddleware);
 app.use(passport.initialize());
-
 app.use(passport.session());
 
 // S3 연결 설정
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
-const multer = require("multer");
-const multerS3 = require("multer-s3");
 const connectDB = require("./routes/database");
 const console = require("console");
-const s3Client = new S3Client({
-  region: "ap-southeast-2",
-  credentials: {
-    accessKeyId: process.env.S3_ACCESS_KEY,
-    secretAccessKey: process.env.S3_ACCESS_SECRET_KEY,
-  },
-});
-const upload = multer({ storage: multer.memoryStorage() });
 
 const PORT = process.env.PORT || 8080;
 // MongoDB 연결
@@ -126,20 +116,11 @@ passport.deserializeUser(async (user, done) => {
   let result = await db
     .collection("users")
     .findOne({ _id: new ObjectId(user.id) });
-  delete result.password;
+  delete result?.password;
   process.nextTick(() => {
     done(null, result);
   });
 });
-// 로그인 확인하는 미들웨어 정의
-const checkLogin = (req, res, next) => {
-  if (!req.user) {
-    res.status(500).send({ message: "로그인해야 합니다." });
-    return;
-  } else {
-    next();
-  }
-};
 //메인페이지 라우팅
 app.use("/", require("./routes/list"));
 // 글 작성 페이지
@@ -152,223 +133,65 @@ app.get("/write", (req, res) => {
   res.render("write.ejs");
 });
 
-// S3 업로드를 담당하는 공통 함수
-async function uploadToS3(file, username) {
-  const optimizedBuffer = await sharp(file.buffer)
-    .resize(1200, null, { withoutEnlargement: true })
-    .webp({ quality: 80 })
-    .toBuffer();
-
-  const fileName = `posts/${Date.now()}-${username}.webp`;
-  const params = {
-    Bucket: "nodeblogforum0530",
-    Key: fileName,
-    Body: optimizedBuffer,
-    ContentType: "image/webp",
-  };
-
-  await s3Client.send(new PutObjectCommand(params));
-  // 시드니 리전 주소로 반환
-  return `https://nodeblogforum0530.s3.ap-southeast-2.amazonaws.com/${fileName}`;
-}
 // 이미지 선제 업로드
-app.post(
-  "/upload-image",
-  checkLogin,
-  upload.single("img1"),
-  async (req, res) => {
-    try {
-      if (!req.file)
-        return res.status(400).json({ message: "파일이 없습니다." });
+app.use("/", require("./routes/img"));
 
-      // 공통 함수 사용해서 S3에 올리고 주소 받기
-      const imageUrl = await uploadToS3(req.file, req.user.username);
-
-      // 에디터가 요구하는 JSON 형식으로 응답
-      res.status(200).json({ url: imageUrl });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "이미지 서버 업로드 실패" });
-    }
-  },
-);
 //글 작성 로직
-app.post("/newpost", checkLogin, upload.single("img1"), async (req, res) => {
-  try {
-    const { title, content } = req.body;
-    let thumbnailImageUrl = null;
+app.use("/", require("./routes/newpost"));
 
-    if (req.file) {
-      thumbnailImageUrl = await uploadToS3(req.file, req.user.username);
-    }
-
-    const summary = content
-      .replace(/[#*`>]/g, "") // #, *, `, > 기호 제거
-      .replace(/\[.*?\]\(.*?\)/g, "") // [링크](주소) 형태 제거
-      .replace(/!\[.*?\]\(.*?\)/g, "") // ![이미지](주소) 형태 제거
-      .slice(0, 150); // 앞부분 150자만 추출
-
-    const newPost = {
-      title,
-      content, //
-      summary,
-      img: thumbnailImageUrl,
-      createdAt: new Date(),
-      author: {
-        username: req.user.username,
-        email: req.user.email,
-        img: req.user.img,
-      },
-      updatedAt: new Date(),
-    };
-
-    await db.collection("post").insertOne(newPost);
-    res.status(200).json({ message: "글을 작성하였습니다." });
-  } catch (error) {
-    res.status(500).json({ message: "서버 에러" });
-  }
-});
 // 글 세부사항 페이지 렌더링
-app.get("/detail/:id", async (req, res) => {
-  res.set("Cache-Control", "no-store");
-  try {
-    const id = req.params;
-    const result = await db
-      .collection("post")
-      .findOne({ _id: new ObjectId(id) });
-    const contentHtml = md.render(result.content);
-    const comments = await db
-      .collection("comments")
-      .find({ parent: new ObjectId(id) })
-      .toArray();
-    // db에서 null 값 왔을 경우 리다이렉트
-    if (result === null) {
-      return res.redirect("/list");
-    }
-    res.render("detail.ejs", {
-      post: result,
-      comment: comments,
-      contentHtml: contentHtml,
-    });
-    // 이상한 값을 입력했을 경우 리다이렉트
-  } catch (error) {
-    return res.redirect("/list");
-  }
-});
-// 글 수정 페이지 렌더링
-app.get("/edit/:id", async (req, res) => {
-  // 로그인 확인
-  if (!req.user) {
-    return res.redirect("/list");
-  }
-  const id = req.params.id;
-  const result = await db.collection("post").findOne({ _id: new ObjectId(id) });
-  // 작성자 확인
-  if (result.author.email != req.user.email) {
-    return res.redirect("/list");
-  }
-  res.render("edit.ejs", { post: result });
-});
-// 글 수정 요청 처리
-app.patch("/edit", upload.single("img1"), async (req, res) => {
-  const { title, content, _id } = req.body;
-  try {
-    if (!content.trim() || !title.trim()) {
-      res.status(400).send({ message: "모든 항목을 채워야 합니다." });
-    }
-    if (req.file) {
-      thumbnailImageUrl = await uploadToS3(req.file, req.user.username);
-    }
-    const summary = content
-      .replace(/[#*`>]/g, "") // #, *, `, > 기호 제거
-      .replace(/\[.*?\]\(.*?\)/g, "") // [링크](주소) 형태 제거
-      .replace(/!\[.*?\]\(.*?\)/g, "") // ![이미지](주소) 형태 제거
-      .slice(0, 150); // 앞부분 150자만 추출
-    const editedPost = {
-      summary,
-      updatedAt: new Date(),
-      title,
-      content,
-    };
-    await db
-      .collection("post")
-      .updateOne({ _id: new ObjectId(_id) }, { $set: editedPost });
-    res.status(200).send({ message: "글이 수정되었습니다." });
-  } catch (error) {
-    res.status(500).send({ message: error });
-  }
-});
-// 글 삭제 요청 처리
-app.delete("/detail", checkLogin, async (req, res) => {
-  if (!req.user) {
-    return res.status(400).send({ message: "로그인하셔야 합니다." });
-  }
-  const result = await db
-    .collection("post")
-    .findOne({ _id: new ObjectId(req.body._id) });
-  if (req.user.role !== "admin") {
-    if (result.author.email != req.user.email) {
-      return res.status(400).send({ message: "권한이 없습니다." });
-    }
-  }
-  try {
-    db.collection("post").deleteOne({ _id: new ObjectId(req.body._id) });
-    res.status(200).send({ message: "게시글이 삭제되었습니다." });
-  } catch (error) {
-    res.status(500).send({ message: "네트워크 오류" });
-  }
-});
+app.use("/", require("./routes/detail"));
+
+// 글 수정 페이지 렌더링/로직
+app.use("/", require("./routes/edit"));
+
 // 회원가입 페이지
-app.get("/register", (req, res) => {
-  if (req.user) {
-    res.redirect("/list");
-    return;
-  }
-  res.render("register.ejs");
-});
+app.use("/register", require("./routes/register"));
+
 // 회원가입 요청 처리
-app.post("/register", async (req, res) => {
-  const user_data = req.body;
-  //이미 가입된 정보가 있는지 확인
-  try {
-    if (await db.collection("users").findOne({ email: user_data.email })) {
-      return res.status(400).send({ message: "이미 존재하는 이메일입니다." });
-    } else if (
-      await db.collection("users").findOne({ username: user_data.username })
-    ) {
-      return res.status(400).send({ message: "이미 존재하는 별명입니다." });
-    }
-  } catch (error) {
-    res.status(500).send({ message: "네트워크 오류", error: error });
-  }
-  // 이메일 인증되지 않았다면 거부 / 인젝션 방어
-  const isVerified = await db
-    .collection("unverifiedUsers")
-    .findOne({ email: user_data.email });
-  if (isVerified.verified === false) {
-    // console.log('사용자 이메일 인증 상태', isVerified)
-    res.status(400).json({ message: "잘못된 요청입니다." });
-    return;
-  }
-  //해싱 소금치기
-  const saltRounds = 10;
-  //유저 정보 전처리
-  user_data.password = await bcrypt.hash(user_data.password, saltRounds); // 비밀번호 해싱
-  user_data.role = "user"; // 유저 역할
-  user_data.createdAt = new Date().toLocaleDateString("kr"); // 가입 날짜
-  user_data.updatedAt = ""; // 본인 정보 수정 날짜
-  user_data.emailVerifed = true; // 이메일 인증 정보
-  user_data.img = "";
-  // 유저 정보 DB에 저장
-  try {
-    db.collection("users").insertOne(user_data);
-    res.status(200).json({ message: "회원가입에 성공하셨습니다." });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "회원가입에 실패하였습니다.", error: error });
-  }
-});
+// app.post("/register", async (req, res) => {
+//   const user_data = req.body;
+//   //이미 가입된 정보가 있는지 확인
+//   try {
+//     if (await db.collection("users").findOne({ email: user_data.email })) {
+//       return res.status(400).send({ message: "이미 존재하는 이메일입니다." });
+//     } else if (
+//       await db.collection("users").findOne({ username: user_data.username })
+//     ) {
+//       return res.status(400).send({ message: "이미 존재하는 별명입니다." });
+//     }
+//   } catch (error) {
+//     res.status(500).send({ message: "네트워크 오류", error: error });
+//   }
+//   // 이메일 인증되지 않았다면 거부 / 인젝션 방어
+//   const isVerified = await db
+//     .collection("unverifiedUsers")
+//     .findOne({ email: user_data.email });
+//   if (isVerified.verified === false) {
+//     // console.log('사용자 이메일 인증 상태', isVerified)
+//     res.status(400).json({ message: "잘못된 요청입니다." });
+//     return;
+//   }
+//   //해싱 소금치기
+//   const saltRounds = 10;
+//   //유저 정보 전처리
+//   user_data.password = await bcrypt.hash(user_data.password, saltRounds); // 비밀번호 해싱
+//   user_data.role = "user"; // 유저 역할
+//   user_data.createdAt = new Date().toLocaleDateString("kr"); // 가입 날짜
+//   user_data.updatedAt = ""; // 본인 정보 수정 날짜
+//   user_data.emailVerifed = true; // 이메일 인증 정보
+//   user_data.img = "";
+//   // 유저 정보 DB에 저장
+//   try {
+//     db.collection("users").insertOne(user_data);
+//     res.status(200).json({ message: "회원가입에 성공하셨습니다." });
+//   } catch (error) {
+//     res
+//       .status(500)
+//       .json({ message: "회원가입에 실패하였습니다.", error: error });
+//   }
+// });
+
 // 이메일 인증 용 메일발송 객체 생성
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -377,10 +200,7 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASSWORD, // 구글 앱 비밀번호
   },
 });
-// 이메일 인증용 6자리 랜덤코드 생성 함수
-const generateRandomCode = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-};
+
 // 이메일로 인증코드 전송 + db에 유저 인증정보 저장 로직
 app.post("/api/send-auth-email", async (req, res) => {
   try {
@@ -492,61 +312,17 @@ app.get("/logout", (req, res) => {
   });
 });
 // 마이 페이지 라우팅
-app.get("/my-page", (req, res) => {
-  if (!req.user) {
-    return res.redirect("/");
-  }
-  res.render("my-page.ejs");
-});
-// 마이 페이지 프로필 사진 업로드 로직
-app.post(
-  "/my-page/img",
-  checkLogin,
-  upload.single("profileImg"),
-  async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).send({ message: "업로드할 파일이 없습니다." });
-      }
-      // Sharp를 이용한 프로필 이미지 최적화
-      const optimizedBuffer = await sharp(req.file.buffer)
-        .resize(300, 300, { fit: "cover", position: "center" })
-        .webp({ quality: 90 })
-        .toBuffer();
-      // S3 파일명 설정
-      const fileName = `profiles/${req.user._id}-${Date.now()}.webp`;
-      // AWS S3에 업로드
-      const params = {
-        Bucket: "nodeblogforum0530",
-        Key: fileName,
-        Body: optimizedBuffer,
-        ContentType: "image/webp",
-      };
-      await s3Client.send(new PutObjectCommand(params));
-      // 업로드된 새 이미지 URL 생성
-      const newImageUrl = `https://nodeblogforum0530.s3.ap-southeast-2.amazonaws.com/${fileName}`;
-      //  DB 업데이트
-      await db
-        .collection("users")
-        .updateOne(
-          { _id: new ObjectId(req.user._id) },
-          { $set: { img: newImageUrl } },
-        );
-      return res.status(200).json({
-        message: "사진 업로드 성공",
-        url: newImageUrl,
-      });
-    } catch (error) {
-      console.error("프로필 업로드 에러:", error);
-      return res.status(500).json({ message: "사진 업로드 실패" });
-    }
-  },
-);
+app.use("/my-page", require("./routes/my-page"));
+
+// 댓글 라우팅
 app.use("/", require("./routes/comment"));
+
 // 채팅방 라우터
 app.use("/", require("./routes/chat"));
+
 // 다른 유저 정보 페이지
 app.use("/", require("./routes/user"));
+
 // 웹소켓 설정
 io.on("connection", (socket) => {
   // 룸 개설 요청
