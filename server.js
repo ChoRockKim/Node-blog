@@ -130,6 +130,10 @@ app.get("/write", (req, res) => {
     res.redirect("/login");
     return;
   }
+  if (req.user.role !== "admin") {
+    return res.redirect("/");
+  }
+
   res.render("write.ejs");
 });
 
