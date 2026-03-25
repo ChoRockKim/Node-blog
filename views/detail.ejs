@@ -21,7 +21,9 @@
         </div>
         <h4 class="detail-title"><%= post.title%></h4>
         <div  class="detail-content markdown-body"><%- contentHtml %></div>
-        <img class="detail-img" src= "<%= post.img !== null ? encodeURI(post.img) : '' %>" >
+        <% if (post.img) { %>
+        <img class="detail-img" src="<%= encodeURI(post.img) %>" alt="게시글 이미지">
+        <% } %>
         <p style="font-size: 14px; margin-bottom: 15px; color: rgba(0,0,0,0.6);"><%= new Date(post.createdAt).toLocaleString('ko-KR', { dateStyle: 'long', timeStyle: 'short' }) %></p>
         
         <!-- 작성자가 아니거나 관리자가 아니라면 수정/삭제 버튼 숨기기 -->
@@ -78,7 +80,7 @@
                 <span class="commentor-profile-name no-drag"><%= user ? user.username : '로그인 필요'%></span>
             </div>
             <input type="hidden" id="edit-id" value="">
-            <textarea name="" class="comment-write" placeholder="댓글을 입력해주세요." id="comment"></textarea>
+            <textarea class="comment-write" placeholder="댓글을 입력해주세요." id="comment"></textarea>
             <button class="comment-submit-btn">등록</button>
         </div>
     </div>
@@ -292,7 +294,12 @@
             allMenuBoxes.forEach(box => box.classList.remove('show'));
         }
     });
-
+    document.querySelector('.comment-write').addEventListener('focus', () => {
+        if (!'<%=user%>'){
+            alert('로그인하셔야 합니다.')
+            return window.location.href = "/login"
+        }
+    })
 
 </script>
 </body>

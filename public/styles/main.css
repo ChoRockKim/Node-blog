@@ -95,7 +95,7 @@ a:hover {
 }
 
 .grey-bg {
-  background: #eee;
+  background: #fafaf8;
 }
 
 .white-bg {
@@ -161,7 +161,7 @@ a:hover {
   padding: 10px;
   font-size: 16px;
   width: 100%;
-  border: 1px solid black;
+  border: 1px solid rgb(218, 221, 230);
   border-radius: 5px;
   margin-bottom: 10px;
 }
@@ -228,7 +228,7 @@ a:hover {
 
 .detail-content {
   font-size: 17px;
-  line-height: 1.8;
+  line-height: 1.5;
   font-weight: 600;
   white-space: pre-wrap;
 }
