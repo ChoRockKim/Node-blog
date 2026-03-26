@@ -157,14 +157,14 @@ a:hover {
 
 .mobile-category-container {
   background-color: white;
-  height: 30px;
+  height: 35px;
   align-content: center;
   padding: 5px 12px;
   display: none;
   visibility: hidden;
 }
 .mobile-category-btn {
-  font-size: 14px;
+  font-size: 15px;
 }
 .mobile-category-btn span {
   cursor: pointer;
@@ -990,7 +990,7 @@ a:hover {
 /* 태블릿 사이즈 */
 @media (max-width: 768px) {
   .category-container {
-    top: 65px;
+    top: 70px;
     transform: translateY(0);
     width: 60%;
     left: 0;
@@ -1004,12 +1004,12 @@ a:hover {
   }
   .category-container a {
     display: block;
-    height: 30px;
+    height: 35px;
   }
   .category-item {
     padding: 5px 12px;
     border-radius: 6px;
-    font-size: 14px;
+    font-size: 15px;
     color: #444;
     position: relative;
     height: 100%;
