@@ -1,7 +1,7 @@
 * {
   box-sizing: border-box;
   font-family: "Pretendard", sans-serif;
-  line-height: 1.5;
+  line-height: 1.6;
   font-size: 16px;
 }
 
@@ -266,10 +266,35 @@ a:hover {
   background-color: #f1f1f1 !important; /* 연회색 배경 */
   border-left: none !important; /* 기존의 왼쪽 선 제거 */
   border-radius: 6px; /* 모서리 둥글게 */
-  display: flex;
+  /* display: flex; */
   align-items: flex-start;
   color: #37352f;
-  gap: 12px;
+  /* gap: 16px; */
+}
+
+.markdown-body ul {
+  line-height: 1.3 !important;
+  margin: 0 !important;
+}
+
+.markdown-body ol {
+  line-height: 1.3 !important;
+  margin: 0 !important;
+}
+
+.markdown-body ul li {
+  white-space: none !important;
+}
+
+.markdown-body ul li p {
+  margin: 0 !important;
+}
+.markdown-body ol li p {
+  margin: 0 !important;
+}
+
+.markdown-body > p {
+  margin-bottom: 10px !important;
 }
 
 .detail-bg {
@@ -319,24 +344,55 @@ a:hover {
 
 .detail-content {
   font-size: 17px;
-  line-height: 1.7 !important;
+  line-height: 1.6 !important;
   white-space: pre-wrap;
 }
 
-.detail-content h1 {
-  margin: 0 !important;
+.detail-content li {
+  white-space: normal;
 }
-.detail-content h2 {
-  margin: 0 !important;
+
+.markdown-body blockquote {
+  margin: 0;
 }
-.detail-content h3 {
-  margin: 0 !important;
+.markdown-body pre {
+  margin: 0;
 }
-.detail-content h4 {
+
+.markdown-body h1 {
   margin: 0 !important;
+  background-color: rgb(255, 250, 205, 1) !important;
+  color: black;
+  border-radius: 5px;
+  padding: 2px !important;
+  align-content: center !important;
 }
-.detail-content p {
+.markdown-body h2 {
   margin: 0 !important;
+  padding: 0 !important;
+  background-color: rgb(255, 250, 205, 1) !important;
+  color: black;
+  border-radius: 5px;
+  padding: 2px !important;
+  align-content: center !important;
+}
+.markdown-body h3 {
+  display: inline-block !important;
+  margin: 0 !important;
+  margin-bottom: 10px !important;
+  background-color: rgb(255, 250, 205, 1) !important;
+  color: black;
+  border-radius: 5px;
+  padding: 2px !important;
+  align-content: center !important;
+}
+.markdown-body h4 {
+  margin: 0 !important;
+  background-color: rgb(255, 250, 205, 1) !important;
+  color: black;
+  border-radius: 5px;
+  padding: 2px !important;
+  align-content: center !important;
 }
 .detail-content li {
   margin: 0 !important;
@@ -1105,6 +1161,9 @@ a:hover {
   }
   .category-container {
     width: 100%;
+  }
+  code {
+    font-size: 12px !important;
   }
 }
 
