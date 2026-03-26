@@ -12,16 +12,26 @@ router.get("/edit/:id", async (req, res) => {
   }
   const id = req.params.id;
   const result = await db.collection("post").findOne({ _id: new ObjectId(id) });
+
+  const category = await db.collection("category").find().toArray();
+  const selectedCategory = await db
+    .collection("category")
+    .findOne({ _id: result.category });
+
   // 작성자 확인
   if (result.author.email != req.user.email) {
     return res.redirect("/list");
   }
-  res.render("edit.ejs", { post: result });
+  res.render("edit.ejs", {
+    post: result,
+    category,
+    selectedCategory: selectedCategory.name,
+  });
 });
 
 router.patch("/edit", upload.single("img1"), async (req, res) => {
   let db = req.db;
-  const { title, content, _id } = req.body;
+  const { title, content, _id, category } = req.body;
   try {
     if (!content.trim() || !title.trim()) {
       res.status(400).send({ message: "모든 항목을 채워야 합니다." });
@@ -29,6 +39,14 @@ router.patch("/edit", upload.single("img1"), async (req, res) => {
     if (req.file) {
       thumbnailImageUrl = await uploadToS3(req.file, req.user.username);
     }
+    let categoryId = null;
+    const categoryData = await db
+      .collection("category")
+      .findOne({ name: category });
+    if (categoryData) {
+      categoryId = categoryData._id;
+    }
+
     const summary = content
       .replace(/[#*`>]/g, "") // #, *, `, > 기호 제거
       .replace(/\[.*?\]\(.*?\)/g, "") // [링크](주소) 형태 제거
@@ -39,6 +57,7 @@ router.patch("/edit", upload.single("img1"), async (req, res) => {
       updatedAt: new Date(),
       title,
       content,
+      category: categoryId,
     };
     await db
       .collection("post")

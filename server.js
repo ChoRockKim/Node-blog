@@ -124,17 +124,19 @@ passport.deserializeUser(async (user, done) => {
 //메인페이지 라우팅
 app.use("/", require("./routes/list"));
 // 글 작성 페이지
-app.get("/write", (req, res) => {
+app.get("/write", async (req, res) => {
   // 로그인되어있지 않다면 로그인 페이지로 리다이렉팅
   if (!req.user) {
     res.redirect("/login");
     return;
   }
+  // 임시) 어드민만 글 쓸 수 있음
   if (req.user.role !== "admin") {
     return res.redirect("/");
   }
+  const category = await db.collection("category").find().toArray();
 
-  res.render("write.ejs");
+  res.render("write.ejs", { category });
 });
 
 // 이미지 선제 업로드
@@ -149,52 +151,8 @@ app.use("/", require("./routes/detail"));
 // 글 수정 페이지 렌더링/로직
 app.use("/", require("./routes/edit"));
 
-// 회원가입 페이지
+// 회원가입 페이지/요청처리
 app.use("/register", require("./routes/register"));
-
-// 회원가입 요청 처리
-// app.post("/register", async (req, res) => {
-//   const user_data = req.body;
-//   //이미 가입된 정보가 있는지 확인
-//   try {
-//     if (await db.collection("users").findOne({ email: user_data.email })) {
-//       return res.status(400).send({ message: "이미 존재하는 이메일입니다." });
-//     } else if (
-//       await db.collection("users").findOne({ username: user_data.username })
-//     ) {
-//       return res.status(400).send({ message: "이미 존재하는 별명입니다." });
-//     }
-//   } catch (error) {
-//     res.status(500).send({ message: "네트워크 오류", error: error });
-//   }
-//   // 이메일 인증되지 않았다면 거부 / 인젝션 방어
-//   const isVerified = await db
-//     .collection("unverifiedUsers")
-//     .findOne({ email: user_data.email });
-//   if (isVerified.verified === false) {
-//     // console.log('사용자 이메일 인증 상태', isVerified)
-//     res.status(400).json({ message: "잘못된 요청입니다." });
-//     return;
-//   }
-//   //해싱 소금치기
-//   const saltRounds = 10;
-//   //유저 정보 전처리
-//   user_data.password = await bcrypt.hash(user_data.password, saltRounds); // 비밀번호 해싱
-//   user_data.role = "user"; // 유저 역할
-//   user_data.createdAt = new Date().toLocaleDateString("kr"); // 가입 날짜
-//   user_data.updatedAt = ""; // 본인 정보 수정 날짜
-//   user_data.emailVerifed = true; // 이메일 인증 정보
-//   user_data.img = "";
-//   // 유저 정보 DB에 저장
-//   try {
-//     db.collection("users").insertOne(user_data);
-//     res.status(200).json({ message: "회원가입에 성공하셨습니다." });
-//   } catch (error) {
-//     res
-//       .status(500)
-//       .json({ message: "회원가입에 실패하였습니다.", error: error });
-//   }
-// });
 
 // 이메일 인증 용 메일발송 객체 생성
 const transporter = nodemailer.createTransport({
@@ -363,7 +321,6 @@ io.on("connection", (socket) => {
     }
   });
 });
-
 // 만드는 과정 정리
 // 1. 채팅방에 들어갈 시 룸 생성(conversations id)
 // 2. 채팅을 입력(해당 유저 정보 + 메시지 -> 룸으로 전달)

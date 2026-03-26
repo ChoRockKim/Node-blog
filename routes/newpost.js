@@ -9,11 +9,20 @@ const container = require("markdown-it-container");
 router.post("/newpost", checkLogin, upload.single("img1"), async (req, res) => {
   let db = req.db;
   try {
-    const { title, content } = req.body;
+    const { title, content, category } = req.body;
     let thumbnailImageUrl = null;
 
     if (req.file) {
       thumbnailImageUrl = await uploadToS3(req.file, req.user.username);
+    }
+
+    let categoryId = null;
+
+    const categoryData = await db
+      .collection("category")
+      .findOne({ name: category });
+    if (categoryData) {
+      categoryId = categoryData._id;
     }
 
     const summary = content
@@ -34,6 +43,7 @@ router.post("/newpost", checkLogin, upload.single("img1"), async (req, res) => {
         img: req.user.img,
       },
       updatedAt: new Date(),
+      category: categoryId,
     };
 
     await db.collection("post").insertOne(newPost);

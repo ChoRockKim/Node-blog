@@ -16,6 +16,13 @@ router.get("/detail/:id", async (req, res) => {
     if (result === null) {
       return res.redirect("/list");
     }
+    const category = await db
+      .collection("category")
+      .findOne({ _id: new ObjectId(result.category) });
+
+    if (category) {
+      result.category = category.name;
+    }
 
     const comments = await db
       .collection("comments")

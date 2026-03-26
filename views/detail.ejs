@@ -13,6 +13,7 @@
     <script src="https://kit.fontawesome.com/e7d0c02666.js" crossorigin="anonymous"></script>
 
     <div class="detail-bg">
+        <span class="detail-category"><a href="/list/<%=post?.category%>/1"><%= post?.category%></a></span>
         <div style="display: flex; align-items: center">
             <div class="detail-profile-img">
                 <a href="/user/<%=post.author.username%>"><img src="<%= post.author.img && post.author.img !== '' ? post.author.img : '/images/profile.png' %>" alt=""></a>

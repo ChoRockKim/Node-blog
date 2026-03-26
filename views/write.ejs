@@ -18,7 +18,13 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <%- include('nav.ejs')%>
     <form class="form-box" action="/newpost" , method="POST">
-      <h4>글 작성</h4>
+      <h4 style="margin-bottom: 10px; margin-top: 0">글 작성</h4>
+      <p class="write-category-header">카테고리</p>
+      <select class="write-category-select">
+        <% for (let i=0; i < category.length; i++){%>
+            <option value="<%=category[i].name%>"><%=category[i].name%></option>
+          <%}%>
+      </select>
       <input
         class="write-title"
         name="title"
@@ -100,7 +106,7 @@
           if (confirmReceiver) {
             document.querySelector(".write-title").value = parsedData.title;
             editor.setMarkdown(parsedData.content);
-            alert("글을 불러왔습니다.");
+            return
           } else {
             localStorage.removeItem("temp_post");
           }
@@ -118,9 +124,13 @@
         .addEventListener("click", async () => {
           const title = document.querySelector(".write-title").value;
           const content = editor.getMarkdown();
+          const category = document.querySelector(
+            ".write-category-select",
+          ).value;
           const formData = new FormData();
           formData.append("title", title);
           formData.append("content", content);
+          formData.append("category", category);
 
           try {
             const { data } = await axios.post("/newpost", formData);

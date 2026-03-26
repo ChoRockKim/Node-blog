@@ -6,18 +6,32 @@
     <title>초록</title>
     <link rel="stylesheet" href="/styles/main.css">
 </head>
-<%- include('nav.ejs')%>
-
 <body class="grey-bg">
+  <%- include('nav.ejs')%>
+
+  <div class="main-container">
   <div class="list-header"><span>게시글</span></div>
-  <div style="width: 100%;">
+    <div class="category-container">
+    <ul class="category-list">
+      <a href="/"><li class="category-item category-activated">전체 (<%=post.totalPost%>)</li></a>
+      <% for (let i=0; i<categoryList.length; i++){%>
+        <a href="/list/<%=categoryList[i].name%>/1"><li class="category-item">ㄴ <%=categoryList[i].name%></li></a>
+        <%}%>
+    </ul>
+  </div>
   <div class="white-bg">
+    <div class="mobile-category-container">
+      <div class="mobile-category-btn">
+        <span id="mobile-category-btn" style="font-size: 14px;">전체 <i class="fa-solid fa-angle-down"></i></span>
+      </div>
+    </div>
     <%if (post?.length < 1){%>
           <div class="no-list">게시글이 없습니다.</div>
       <%} else {%>
       <% for (let i=0; i < post.length; i++){%>
         <a class="list-box-container" href="/detail/<%= post[i]._id%>">
           <div class="list-box">
+            <span class="list-category"><%=post[i].categoryDetail.name%></span>
             <div style="display: flex; align-items: center">
               <span class="list-profile-img-container">
                 <img id="profile-img" src="<%= post[i].author.img && post[i].author.img !== '' ? post[i].author.img : '/images/profile.png' %>" alt="">
@@ -52,6 +66,9 @@
       e.preventDefault();
       alert('두 글자 이상 입력해주세요.')
     }
+  })
+  document.querySelector('#mobile-category-btn').addEventListener('click', () => {
+    document.querySelector('.category-container').classList.toggle('show')
   })
 </script>
 </body>

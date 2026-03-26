@@ -10,14 +10,28 @@
 
 <body class="grey-bg">
   <div class="main-container">
-  <div class="list-header"><span>검색결과</span></div>
+  <div class="list-header"><span><%=category%> 카테고리 게시글</span></div>
+  <div class="category-container">
+    <ul class="category-list">
+      <a href="/"><li class="category-item">전체 (<%=post.totalPost%>)</li></a>
+      <% for (let i=0; i<categoryList.length; i++){%>
+        <a href="/list/<%=categoryList[i].name%>/1"><li class="category-item">ㄴ <%=categoryList[i].name%></li></a>
+        <%}%>
+    </ul>
+  </div>
   <div class="white-bg">
+    <div class="mobile-category-container">
+      <div class="mobile-category-btn">
+        <span id="mobile-category-btn" style="font-size: 14px;"><%=category%> <i class="fa-solid fa-angle-down"></i></span>
+      </div>
+    </div>
     <%if (post?.length < 1){%>
-          <div class="no-list">"<%=query.title%>" 검색결과가 없습니다.</div>
+          <div class="no-list">게시글이 없습니다.</div>
       <%} else {%>
       <% for (let i=0; i < post.length; i++){%>
-        <a href="/detail/<%= post[i]._id%>">
+        <a class="list-box-container" href="/detail/<%= post[i]._id%>">
           <div class="list-box">
+            <span class="list-category"><%=post[i].categoryDetail.name%></span>
             <div style="display: flex; align-items: center">
               <span class="list-profile-img-container">
                 <img id="profile-img" src="<%= post[i].author.img && post[i].author.img !== '' ? post[i].author.img : '/images/profile.png' %>" alt="">
@@ -25,7 +39,7 @@
               <p style="margin: none; display: block; font-size: 14px;"><%= post[i].author.username%></p>
             </div>
             <h4><%= post[i].title%></h4>
-            <p><%= post[i].content%></p>
+            <p><%= post[i].summary != '' && post[i].summary ? post[i].summary : post[i].content%></p>
             <p style="font-size: 12.5px;"><%= new Date(post[i].createdAt).toLocaleString('ko-KR', { dateStyle: 'long', timeStyle: 'short' }) %></p>
           </div>
         </a>
@@ -52,6 +66,18 @@
       e.preventDefault();
       alert('두 글자 이상 입력해주세요.')
     }
+  })
+</script>
+<script>
+    const categoryList = document.querySelectorAll('.category-item');
+    categoryList.forEach((data) => {
+        if (data.innerHTML.split(' ')[1] === '<%=category%>'){
+            console.log(data.innerHTML, true)
+            data.classList.add('category-activated')
+        }
+    })
+     document.querySelector('#mobile-category-btn').addEventListener('click', () => {
+    document.querySelector('.category-container').classList.toggle('show')
   })
 </script>
 </body>
