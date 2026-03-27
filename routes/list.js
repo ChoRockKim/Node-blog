@@ -1,22 +1,20 @@
 const { ObjectId } = require("mongodb");
 
 const router = require("express").Router();
+const escapeRegExp = require("../utils/escapeRegExp");
 
 // 메인페이지 라우팅 -> 기본 list 페이지로 리다이렉트
 router.get("/", (req, res) => {
   res.redirect("/list");
 });
+
 // 리스트 페이지 라우팅
 router.get("/list", async (req, res) => {
   let db = req.db;
   const result = await db.collection("post").find().toArray();
   res.redirect("/list/1");
 });
-// 정규표현식 전처리
-function escapeRegExp(string) {
-  // $ & * + . ? [ ] ( ) | { } / 등 특수문자를 전부 \와 함께 치환
-  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
+
 // 리스트 검색 라우팅
 router.get("/list/search", (req, res) => {
   if (!req.query.title.trim()) {

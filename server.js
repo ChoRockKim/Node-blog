@@ -21,6 +21,7 @@ const LocalStrategy = require("passport-local");
 const MongoStore = require("connect-mongo").default;
 const checkLogin = require("./middlewares/checkLogin");
 const generateRandomCode = require("./utils/generateRandomCode");
+const errorHandler = require("./middlewares/errorHandler");
 
 // socket.io 설정
 const { createServer } = require("http");
@@ -328,8 +329,4 @@ io.on("connection", (socket) => {
 // 4. DB에 저장한 메시지를 날려주기
 
 // 400 에러처리 미들웨어
-app.use((req, res, next) => {
-  res.status(404).render("error.ejs", {
-    message: "요청하신 페이지를 찾을 수 없습니다.",
-  });
-});
+app.use(errorHandler);
