@@ -375,6 +375,7 @@ a:hover {
   border-radius: 5px;
   padding: 2px !important;
   align-content: center !important;
+  font-size: 23px !important;
 }
 .markdown-body h3 {
   display: inline-block !important;
