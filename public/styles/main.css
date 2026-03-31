@@ -1000,7 +1000,8 @@ a:hover {
   top: 50%; /* 상단에서 멈출 위치 */
   transform: translateY(-50%);
   width: 20%;
-  height: 75vh;
+  height: fit-content;
+  max-height: 80vh;
   align-self: flex-start;
   /* border-left: 1px solid #eee; */
   padding-left: 15px;
