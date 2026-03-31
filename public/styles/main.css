@@ -11,6 +11,7 @@ html {
   -webkit-tap-highlight-color: transparent;
   /* iOS 사파리에서 가로 전환 시 글자 크기가 멋대로 커지는 것 방지 */
   -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -375,7 +376,7 @@ a:hover {
   border-radius: 5px;
   padding: 2px !important;
   align-content: center !important;
-  font-size: 23px !important;
+  font-size: 25px !important;
 }
 .markdown-body h3 {
   display: inline-block !important;
@@ -987,6 +988,56 @@ a:hover {
   margin-bottom: 10px;
 }
 
+.detail-container {
+  display: flex;
+  gap: 50px;
+  position: relative;
+}
+
+.toc-sidebar {
+  position: fixed;
+  right: 0;
+  top: 50%; /* 상단에서 멈출 위치 */
+  transform: translateY(-50%);
+  width: 20%;
+  height: 75vh;
+  align-self: flex-start;
+  /* border-left: 1px solid #eee; */
+  padding-left: 15px;
+  overflow-y: auto;
+}
+
+.toc-link {
+  display: block;
+  font-size: 14px;
+  color: #666;
+  text-decoration: none;
+  margin-bottom: 10px;
+  transition: all 0.2s;
+}
+
+.toc-link:hover {
+  color: #007bff;
+}
+.toc-link.is-h3 {
+  padding-left: 15px;
+  font-size: 13px;
+  color: #888;
+}
+.toc-link.is-h4 {
+  padding-left: 30px;
+  font-size: 12px;
+  color: #888;
+}
+
+.toc-link.active {
+  color: #599468; /* 파란색으로 강조 */
+  font-weight: bold; /* 굵게 */
+  transform: scale(1.05); /* 살짝 커지게 */
+  border-left: 2px solid #007bff; /* 왼쪽에 선 그어주기 */
+  padding-left: 10px;
+}
+
 /* ============================ 여기부터는 미디어쿼리 =================================*/
 /* 태블릿 사이즈 */
 @media (max-width: 768px) {
@@ -1028,6 +1079,33 @@ a:hover {
   .mobile-category-container {
     display: block;
     visibility: visible;
+  }
+  .toc-sidebar {
+    display: none;
+    visibility: hidden;
+  }
+  /* 1. 팝업창 전체 너비 조절 */
+  .toastui-editor-popup {
+    width: 90% !important; /* 화면 너비의 90%만 차지하게 */
+    max-width: 350px !important; /* 너무 커지지 않게 최대치 제한 */
+    left: 50% !important; /* 왼쪽에서 50% 지점으로 이동 */
+    transform: translateX(-50%) !important; /* 정확히 중앙 정렬 */
+    margin-left: 0 !important; /* 기존 에디터의 마진 설정 무력화 */
+  }
+
+  /* 2. 팝업 내부의 입력창(URL 입력 등) 너비 조절 */
+  .toastui-editor-popup input {
+    width: 100% !important; /* 입력창이 팝업 밖으로 나가지 않게 */
+    box-sizing: border-box; /* 패딩이 너비에 포함되도록 */
+  }
+
+  /* 3. 파일 선택 버튼 등 내부 요소 정렬 */
+  .toastui-editor-file-select-button {
+    width: 100% !important; /* 버튼도 시원하게 꽉 채우기 */
+    margin-bottom: 10px;
+  }
+  .toastui-editor-tooltip {
+    display: none !important;
   }
 }
 
@@ -1165,33 +1243,6 @@ a:hover {
   }
   code {
     font-size: 12px !important;
-  }
-}
-
-/* 모바일 화면(너비 768px 미만)에서만 적용 */
-@media (max-width: 767px) {
-  /* 1. 팝업창 전체 너비 조절 */
-  .toastui-editor-popup {
-    width: 90% !important; /* 화면 너비의 90%만 차지하게 */
-    max-width: 350px !important; /* 너무 커지지 않게 최대치 제한 */
-    left: 50% !important; /* 왼쪽에서 50% 지점으로 이동 */
-    transform: translateX(-50%) !important; /* 정확히 중앙 정렬 */
-    margin-left: 0 !important; /* 기존 에디터의 마진 설정 무력화 */
-  }
-
-  /* 2. 팝업 내부의 입력창(URL 입력 등) 너비 조절 */
-  .toastui-editor-popup input {
-    width: 100% !important; /* 입력창이 팝업 밖으로 나가지 않게 */
-    box-sizing: border-box; /* 패딩이 너비에 포함되도록 */
-  }
-
-  /* 3. 파일 선택 버튼 등 내부 요소 정렬 */
-  .toastui-editor-file-select-button {
-    width: 100% !important; /* 버튼도 시원하게 꽉 채우기 */
-    margin-bottom: 10px;
-  }
-  .toastui-editor-tooltip {
-    display: none !important;
   }
 }
 

@@ -11,8 +11,13 @@
 <body class="grey-bg">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://kit.fontawesome.com/e7d0c02666.js" crossorigin="anonymous"></script>
-
-    <div class="detail-bg">
+    <div class="main-container">
+        <aside class="toc-sidebar">
+            <div class="toc-title">
+                <nav id="toc-content"></nav>
+            </div>
+        </aside>
+        <div class="detail-bg">
         <span class="detail-category"><a href="/list/<%=post?.category%>/1"><%= post?.category%></a></span>
         <div style="display: flex; align-items: center">
             <div class="detail-profile-img">
@@ -84,6 +89,7 @@
             <textarea class="comment-write" placeholder="댓글을 입력해주세요." id="comment"></textarea>
             <button class="comment-submit-btn">등록</button>
         </div>
+    </div>
     </div>
     
 <!-- 글 삭제 요청 시 처리 -->
@@ -301,6 +307,50 @@
             return window.location.href = "/login"
         }
     })
+
+</script>
+<!-- 목차 기능 -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const content = document.querySelector('.detail-content');
+        const tocContainer = document.querySelector('#toc-content');
+        const headings = content.querySelectorAll('h2, h3, h4');
+
+        if (headings.length === 0) {
+            document.querySelector('.toc-sidebar').style.display = 'none';
+            return;
+        }
+        headings.forEach((heading, index) => {
+            const id = heading.id || `heading-${index}`;
+            heading.id = id;
+
+            const link = document.createElement('a');
+            link.href = `#${id}`
+            link.textContent = heading.textContent;
+            link.classList.add('toc-link')
+            
+            if (heading.tagName === 'H3') {
+                link.classList.add('is-h3');
+            }
+            if (heading.tagName === 'H4') {
+                link.classList.add('is-h4')
+            }
+            tocContainer.appendChild(link);
+        })
+            const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                const id = entry.target.id;
+                document.querySelectorAll('.toc-link').forEach(link => {
+                    link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+                });
+                }
+            });
+            }, { rootMargin: '-10% 0px -80% 0px' }); // 감지 영역 조절
+
+            headings.forEach(h => observer.observe(h));
+    })
+
 
 </script>
 </body>
