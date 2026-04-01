@@ -6,6 +6,11 @@
     <title>초록</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-light.min.css" />
     <link rel="stylesheet" href="/styles/main.css">
+    <!-- Prism.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" data-manual></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
 </head>
 <%- include('nav.ejs')%>
 <body class="grey-bg">
@@ -108,7 +113,7 @@
         }
         if (window.confirm('삭제하시겠습니까?')) {
             try {
-                const response = await fetch('/detail?_id=<%post._id%>', 
+                const response = await fetch('/detail?_id=<%=post._id%>', 
                     {method : 'DELETE', 
                     headers: {'Content-Type': 'application/json'}, 
                     body : JSON.stringify(
@@ -350,8 +355,55 @@
 
             headings.forEach(h => observer.observe(h));
     })
+</script>
+<!-- 코드 블럭 스타일 -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('pre code').forEach((el) => {
+          if (!el.className.includes('language-')) {
+              el.classList.add('language-javascript'); // 기본값으로 지정
+          }
+      });
+      if (typeof Prism !== 'undefined') {
+          Prism.highlightAll(); 
 
+          // Rainbow Brackets: 하이라이팅 이후 괄호 깊이 계산
+          document.querySelectorAll('pre code').forEach(codeBlock => {
+              let depth = 0;
+              codeBlock.querySelectorAll('.token.punctuation').forEach(token => {
+                  const char = token.textContent.trim();
+                  if (char === '(' || char === '{' || char === '[') {
+                      depth++;
+                      token.classList.add(`depth-${(depth - 1) % 3 + 1}`);
+                  } else if (char === ')' || char === '}' || char === ']') {
+                      token.classList.add(`depth-${(depth - 1) % 3 + 1}`);
+                      depth = Math.max(0, depth - 1);
+                  }
+              });
+          });
+      }
 
+      const preTags = document.querySelectorAll('.detail-content pre');
+      preTags.forEach(pre => {
+        const copyBtn = document.createElement('span')
+        copyBtn.classList.add('copy-btn')
+        copyBtn.innerHTML = 'Copy'
+        pre.appendChild(copyBtn);
+        copyBtn.addEventListener('click', async () => {
+            const code = pre.querySelector('code').textContent.trim();
+            try {
+                await navigator.clipboard.writeText(code);
+                copyBtn.innerHTML = 'Copied'
+
+                setTimeout(() => {
+                    copyBtn.innerHTML='Copy';
+                }, 2000)
+            } catch (error) {
+                console.log('복사 실패ㅜㅜ')
+            }
+        })
+      })
+  });
 </script>
 </body>
 </html>

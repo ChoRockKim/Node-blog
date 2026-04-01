@@ -349,6 +349,13 @@ a:hover {
   white-space: pre-wrap;
 }
 
+.detail-content pre {
+  white-space: pre !important;
+  background-color: #282c34;
+  word-break: normal;
+  word-wrap: normal;
+}
+
 .detail-content li {
   white-space: normal;
 }
@@ -362,7 +369,7 @@ a:hover {
 
 .markdown-body h1 {
   margin: 0 !important;
-  background-color: rgb(255, 250, 205, 1) !important;
+  /* background-color: rgb(255, 250, 205, 1) !important; */
   color: black;
   border-radius: 5px;
   padding: 2px !important;
@@ -371,30 +378,35 @@ a:hover {
 .markdown-body h2 {
   margin: 0 !important;
   padding: 0 !important;
-  background-color: rgb(255, 250, 205, 1) !important;
+  /* background-color: rgb(255, 250, 205, 1) !important; */
   color: black;
   border-radius: 5px;
   padding: 2px !important;
   align-content: center !important;
-  font-size: 25px !important;
+  font-size: 26.25px !important;
+  font-weight: 700;
 }
 .markdown-body h3 {
   display: inline-block !important;
   margin: 0 !important;
   margin-bottom: 10px !important;
-  background-color: rgb(255, 250, 205, 1) !important;
+  /* background-color: rgb(255, 250, 205, 1) !important; */
   color: black;
   border-radius: 5px;
   padding: 2px !important;
   align-content: center !important;
+  font-weight: 700;
+  font-size: 23px !important;
 }
 .markdown-body h4 {
   margin: 0 !important;
-  background-color: rgb(255, 250, 205, 1) !important;
+  /* background-color: rgb(255, 250, 205, 1) !important; */
   color: black;
   border-radius: 5px;
   padding: 2px !important;
   align-content: center !important;
+  font-weight: 700;
+  font-size: 21px !important;
 }
 .detail-content li {
   margin: 0 !important;
@@ -1039,6 +1051,94 @@ a:hover {
   padding-left: 10px;
 }
 
+/* 코드 블록 전체 감싸는 스타일 */
+pre {
+  background-color: #282c34 !important; /*Atom One Dark 배경색*/
+  padding: 20px !important;
+  padding-top: 60px !important;
+  border-radius: 15px !important;
+  overflow-x: auto; /* 코드가 길면 가로 스크롤 */
+  margin: 20px 0;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1); /* 살짝 그림자 추가 */
+  position: relative;
+}
+/* macos 스타일 코드 헤더 */
+pre ::after {
+  content: "";
+  display: block;
+  width: 120%;
+  position: absolute;
+  height: 40px;
+  background-color: #424041;
+  top: 0;
+  left: 0;
+}
+/* macos 스타일 창제어 버튼 */
+pre ::before {
+  content: "";
+  display: block;
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  border-radius: 50%;
+  background-color: #ff5f56;
+  top: 12px;
+  z-index: 10;
+  left: 10px;
+  box-shadow:
+    25px 0 0 #ffbd2e,
+    50px 0 0 #27c93f;
+}
+
+/* 내부 코드 폰트 및 간격 */
+code {
+  font-family:
+    "Fira Code", "Cascadia Code", "Source Code Pro", monospace !important;
+  font-size: 14px !important;
+  line-height: 1.6;
+}
+
+.token.punctuation.depth-1 {
+  color: #ffd700 !important;
+}
+
+.token.punctuation.depth-2 {
+  color: #da70d6 !important;
+}
+
+.token.punctuation.depth-3 {
+  color: #179fff !important;
+}
+
+.token.comment {
+  font-size: 14px !important;
+}
+
+.copy-btn {
+  position: absolute;
+  display: block;
+  top: 7px;
+  right: 10px;
+  width: 50px;
+  height: 30px;
+  z-index: 10;
+  align-content: center;
+  text-align: center;
+  border-radius: 5px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.copy-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+.copy-btn::after {
+  display: none;
+}
+.copy-btn::before {
+  display: none;
+}
+
 /* ============================ 여기부터는 미디어쿼리 =================================*/
 /* 태블릿 사이즈 */
 @media (max-width: 768px) {
@@ -1082,8 +1182,8 @@ a:hover {
     visibility: visible;
   }
   .toc-sidebar {
-    display: none;
-    visibility: hidden;
+    display: none !important;
+    visibility: hidden !important;
   }
   /* 1. 팝업창 전체 너비 조절 */
   .toastui-editor-popup {
@@ -1108,6 +1208,16 @@ a:hover {
   .toastui-editor-tooltip {
     display: none !important;
   }
+  pre ::after {
+    content: "";
+    display: block;
+    width: 150%;
+    position: absolute;
+    height: 40px;
+    background-color: #424041;
+    top: 0;
+    left: 0;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1123,9 +1233,6 @@ a:hover {
   .nav-list-mobile i {
     font-size: 18px;
     cursor: pointer;
-  }
-  .detail-content {
-    line-height: 1.8;
   }
 
   .detail-content p,
@@ -1244,6 +1351,25 @@ a:hover {
   }
   code {
     font-size: 12px !important;
+  }
+  code span {
+    font-size: 12px !important;
+  }
+  .token.comment {
+    font-size: 12px !important;
+  }
+  pre {
+    font-size: 12px !important;
+  }
+  pre ::after {
+    content: "";
+    display: block;
+    width: 200%;
+    position: absolute;
+    height: 40px;
+    background-color: #424041;
+    top: 0;
+    left: 0;
   }
 }
 

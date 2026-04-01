@@ -1,5 +1,7 @@
 const { ObjectId } = require("mongodb");
-const md = require("markdown-it")();
+const md = require("markdown-it")({
+  langPrefix: "language-",
+});
 const router = require("express").Router();
 const checkLogin = require("../middlewares/checkLogin");
 
