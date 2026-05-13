@@ -2,7 +2,7 @@ name: Deploy to EC2
 
 on:
   push:
-    branches: [ "main" ] # main 브랜치에 푸시하면 작동
+    branches: ["main"] # main 브랜치에 푸시하면 작동
 
 jobs:
   deploy:
@@ -11,9 +11,9 @@ jobs:
       # 1. 최신 코드 가져오기 (v4로 업데이트해서 Node 20 경고 해결)
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Check Secrets
-        run : |
+        run: |
           if [ -z "${{ secrets.DOCKER_USERNAME }}" ]; then echo "DOCKER_USERNAME is EMPTY"; else echo "DOCKER_USERNAME is SET"; fi
           if [ -z "${{ secrets.DOCKER_PASSWORD }}" ]; then echo "DOCKER_PASSWORD is EMPTY"; else echo "DOCKER_PASSWORD is SET"; fi
 
@@ -46,6 +46,8 @@ jobs:
             sudo docker run -d -p 8080:8080 --name my-blog \
               -e DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
               -e SESSION_SECRET='${{ secrets.SESSION_SECRET }}' \
+              -e S3_ACCESS_KEY='${{ secrets.S3_ACCESS_KEY }}' \
+              -e S3_ACCESS_SECRET_KEY='${{ secrets.S3_ACCESS_SECRET_KEY }}' \
               ${{ secrets.DOCKER_USERNAME }}/node-blog:latest
             # 안 쓰는 오래된 이미지들 정리 (서버 용량 관리)
             sudo docker image prune -f
