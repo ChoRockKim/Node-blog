@@ -98,7 +98,7 @@ router.get("/list/:id", async (req, res) => {
       },
     ])
     .toArray();
-  console.log(result);
+  // console.log(result);
 
   const totalPost = await db.collection("post").countDocuments();
   const totalPages = Math.ceil(totalPost / limit);
@@ -162,7 +162,7 @@ router.get("/list/:category/:id", async (req, res) => {
 
     res.render("category-list.ejs", { post: result, category, categoryList });
   } catch (error) {
-    console.log("못 불러옴");
+    // console.log("못 불러옴");
     res.redirect("/list");
   }
 });
